@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Via PilsRemote</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="get_users_error">User data could not be loaded, you cannot log in at this time.</string>
+    <string name="get_products_error">Product data could not be loaded.</string>
+    <string name="unknown_user">Unknown User</string>
+    <string name="action_search">Search</string>
+    <string name="login_select_user_hint">Please select a user to log in with.</string>
+    <string name="login_enter_pincode_hint">Please enter your pincode below</string>
+    <string name="login_submit_button">Login</string>
+    <string name="invalid_pincode">Invalid pincode.</string>
+
+    <string name="pref_user_id">PREF_USER_ID</string>
+    <string name="pref_pin">PREF_PIN</string>
+    <string name="product_header_balance">Current saldo: €%.2f</string>
+</resources>
