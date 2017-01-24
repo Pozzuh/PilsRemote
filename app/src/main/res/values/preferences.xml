@@ -3,6 +3,7 @@
     <string name="key_user_id">PREF_USER_ID</string>
     <string name="key_pin">PREF_PIN</string>
     <string name="key_beer_only">PREF_BEER_ONLY</string>
+    <bool name="beer_only_default">true</bool>
     <string name="key_logout">PREF_LOGOUT</string>
     <string name="category_general">General</string>
     <string name="beer_only_title">Beer only</string>

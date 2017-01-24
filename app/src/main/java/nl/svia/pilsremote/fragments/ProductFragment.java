@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -178,8 +179,10 @@ public class ProductFragment extends Fragment implements Backable {
         List<ProductModel> productList = new ArrayList<>();
         Iterator<String> iter = products.keys();
 
+        // TODO when turning beer only on, other products should be removed
         boolean beerOnly = mSharedPrefs.getBoolean(
-                getActivity().getString(R.string.key_beer_only), true);
+                getActivity().getString(R.string.key_beer_only),
+                getContext().getResources().getBoolean(R.bool.beer_only_default));
 
         while (iter.hasNext()) {
             String key = iter.next();
@@ -227,7 +230,7 @@ public class ProductFragment extends Fragment implements Backable {
 
         setHasOptionsMenu(true);
 
-        mSharedPrefs = getActivity().getPreferences(Context.MODE_PRIVATE);
+        mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
     }
 
     @Override

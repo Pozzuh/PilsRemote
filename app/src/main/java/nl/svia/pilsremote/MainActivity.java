@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -37,10 +38,12 @@ public class MainActivity extends AppCompatActivity implements NetworkFragmentGe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+        mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+
         mFragmentManager = getSupportFragmentManager();
 
         mNetworkFragment = NetworkFragment.getInstance(mFragmentManager);
-        mSharedPrefs = this.getPreferences(Context.MODE_PRIVATE);
 
         // Check that the activity is using the layout version with
         // the fragment_container FrameLayout
@@ -109,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements NetworkFragmentGe
     @Override
     public void onBackPressed() {
         Log.d(TAG, "Back pressed activity");
+        // TODO reimplement backable
 //        if (mActiveFragment instanceof Backable) {
 //            if (((Backable) mActiveFragment).onBackPressed()) {
 //                Log.d(TAG, "Back pressed ignored");

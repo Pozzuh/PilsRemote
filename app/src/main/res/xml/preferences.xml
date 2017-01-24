@@ -6,7 +6,7 @@
             android:key="@string/key_beer_only"
             android:title="@string/beer_only_title"
             android:summary="@string/beer_only_summary"
-            android:defaultValue="true"/>
+            android:defaultValue="@bool/beer_only_default"/>
     </PreferenceCategory>
 
     <PreferenceCategory
