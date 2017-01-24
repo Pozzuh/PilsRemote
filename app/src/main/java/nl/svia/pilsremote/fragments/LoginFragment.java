@@ -339,7 +339,6 @@ public class LoginFragment extends Fragment implements Backable {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnLoggedInListener {
-        // TODO: Update argument type and name
         void onLoggedIn(int userId, int pin);
     }
 }

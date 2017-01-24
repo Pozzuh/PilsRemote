@@ -157,6 +157,12 @@ public class ProductFragment extends Fragment implements Backable {
                 });
     }
 
+    public void clearList() {
+        if (mProductAdapter != null) {
+            mProductAdapter.removeAll();
+        }
+    }
+
     private void createAdapter() {
         mProductAdapter = new ProductAdapter(getContext(), new ProductAdapter.ProductViewHolderListener() {
             @Override
@@ -179,7 +185,6 @@ public class ProductFragment extends Fragment implements Backable {
         List<ProductModel> productList = new ArrayList<>();
         Iterator<String> iter = products.keys();
 
-        // TODO when turning beer only on, other products should be removed
         boolean beerOnly = mSharedPrefs.getBoolean(
                 getActivity().getString(R.string.key_beer_only),
                 getContext().getResources().getBoolean(R.bool.beer_only_default));
@@ -260,6 +265,7 @@ public class ProductFragment extends Fragment implements Backable {
     @Override
     public void onStart() {
         super.onStart();
+        Log.d(TAG, "Onstart product fragment");
         updateBalanceAndProducts();
     }
 

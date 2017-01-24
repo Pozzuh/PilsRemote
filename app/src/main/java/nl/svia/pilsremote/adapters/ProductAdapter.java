@@ -116,6 +116,10 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         mList.endBatchedUpdates();
     }
 
+    public void removeAll() {
+        mList.clear();
+    }
+
     public void replaceAll(List<ProductModel> models) {
         mList.beginBatchedUpdates();
 

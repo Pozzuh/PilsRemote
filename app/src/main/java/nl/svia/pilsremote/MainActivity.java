@@ -18,15 +18,14 @@ import nl.svia.pilsremote.fragments.NetworkFragment;
 import nl.svia.pilsremote.fragments.ProductFragment;
 import nl.svia.pilsremote.misc.NetworkFragmentGetter;
 
-public class MainActivity extends AppCompatActivity implements NetworkFragmentGetter, LoginFragment.OnLoggedInListener {
+public class MainActivity extends AppCompatActivity implements NetworkFragmentGetter,
+        LoginFragment.OnLoggedInListener, SettingsFragment.SettingsFragmentListener {
     public static final String TAG = "MainActivity";
 
     private FragmentManager mFragmentManager;
 
     private NetworkFragment mNetworkFragment;
     private ProductFragment mProductFragment;
-
-    private Fragment mActiveFragment;
 
     private SharedPreferences mSharedPrefs;
 
@@ -59,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements NetworkFragmentGe
             mUserId = mSharedPrefs.getInt(getString(R.string.key_user_id), -1);
             mPin = mSharedPrefs.getInt(getString(R.string.key_pin), -1);
 
-            FragmentTransaction transaction =  mFragmentManager.beginTransaction();
+            FragmentTransaction transaction = mFragmentManager.beginTransaction();
 
             if (mUserId != -1 && mPin != -1) {
                 mProductFragment = ProductFragment.newInstance(mUserId, mPin);
@@ -100,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements NetworkFragmentGe
         switch (id) {
             case R.id.action_settings:
                 mFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container,  SettingsFragment.newInstance())
+                        .replace(R.id.fragment_container, SettingsFragment.newInstance())
                         .addToBackStack(null)
                         .commit();
                 return true;
@@ -110,19 +109,28 @@ public class MainActivity extends AppCompatActivity implements NetworkFragmentGe
     }
 
     @Override
+    public void onBeerOnlyChanged(boolean flag) {
+        if (flag && mProductFragment != null) {
+            mProductFragment.clearList();
+        }
+    }
+
+    @Override
     public void onBackPressed() {
         Log.d(TAG, "Back pressed activity");
-        // TODO reimplement backable
-//        if (mActiveFragment instanceof Backable) {
-//            if (((Backable) mActiveFragment).onBackPressed()) {
-//                Log.d(TAG, "Back pressed ignored");
-//                return;
-//            } else {
-//                Log.d(TAG, "Back pressed super");
-//                super.onBackPressed();
-//            }
-//        } else {
+
+        Fragment curr = mFragmentManager.findFragmentById(R.id.fragment_container);
+
+        if (curr instanceof Backable) {
+            if (((Backable) curr).onBackPressed()) {
+                Log.d(TAG, "Back pressed ignored");
+                return;
+            } else {
+                Log.d(TAG, "Back pressed super");
+                super.onBackPressed();
+            }
+        } else {
             super.onBackPressed();
-//        }
+        }
     }
 }
