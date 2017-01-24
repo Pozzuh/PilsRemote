@@ -1,12 +1,14 @@
 package nl.svia.pilsremote.misc;
 
-public class UserObject {
+public class ProductModel {
     private int mId;
     private String mName;
+    private double mPrice;
 
-    public UserObject(int id, String name) {
+    public ProductModel(int id, String name, double price) {
         mId = id;
         mName = name;
+        mPrice = price;
     }
 
     public int getId() {
@@ -15,6 +17,10 @@ public class UserObject {
 
     public String getName() {
         return mName;
+    }
+
+    public double getPrice() {
+        return mPrice;
     }
 
     @Override
@@ -27,13 +33,17 @@ public class UserObject {
             return false;
         }
 
-        UserObject user = (UserObject) obj;
+        ProductModel product = (ProductModel) obj;
 
-        if (mId != user.mId) {
+        if (mId != product.mId) {
             return false;
         }
 
-        return mName != null ? mName.equals(user.mName) : user.mName == null;
+        if (mPrice != product.mPrice) {
+            return false;
+        }
+
+        return mName != null ? mName.equals(product.mName) : product.mName == null;
     }
 
     @Override
@@ -45,6 +55,6 @@ public class UserObject {
 
     @Override
     public String toString() {
-        return "UserObject: " + mName + ", " + mId;
+        return "ProductModel: " + mName + ", " + mId + ", €" + mPrice;
     }
 }

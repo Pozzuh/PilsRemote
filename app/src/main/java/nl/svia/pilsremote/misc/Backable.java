@@ -1,4 +1,4 @@
-package nl.svia.pilsremote.fragments;
+package nl.svia.pilsremote.misc;
 
 /**
  * Created by Wilco on 22-01-17.

@@ -2,7 +2,6 @@ package nl.svia.pilsremote.adapters;
 
 import android.content.Context;
 import android.support.v7.util.SortedList;
-import android.support.v7.widget.ButtonBarLayout;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,7 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import nl.svia.pilsremote.R;
-import nl.svia.pilsremote.misc.UserObject;
+import nl.svia.pilsremote.misc.UserModel;
 
 public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context mContext;
@@ -33,16 +32,16 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final static int TYPE_USER = 1;
     private final static int TYPE_FOOTER = 2;
 
-    private Comparator<UserObject> mComparator = new Comparator<UserObject>() {
+    private Comparator<UserModel> mComparator = new Comparator<UserModel>() {
         @Override
-        public int compare(UserObject a, UserObject b) {
+        public int compare(UserModel a, UserModel b) {
             return a.getName().compareTo(b.getName());
         }
     };
 
-    private final SortedList<UserObject> mList = new SortedList<>(UserObject.class, new SortedList.Callback<UserObject>() {
+    private final SortedList<UserModel> mList = new SortedList<>(UserModel.class, new SortedList.Callback<UserModel>() {
         @Override
-        public int compare(UserObject a, UserObject b) {
+        public int compare(UserModel a, UserModel b) {
             return mComparator.compare(a, b);
         }
 
@@ -67,12 +66,12 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         @Override
-        public boolean areContentsTheSame(UserObject oldItem, UserObject newItem) {
+        public boolean areContentsTheSame(UserModel oldItem, UserModel newItem) {
             return oldItem.equals(newItem);
         }
 
         @Override
-        public boolean areItemsTheSame(UserObject item1, UserObject item2) {
+        public boolean areItemsTheSame(UserModel item1, UserModel item2) {
             return item1.getId() == item2.getId();
         }
     });
@@ -107,36 +106,36 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return !headerVisible();
     }
 
-    public UserObject getItem(int i) {
+    public UserModel getItem(int i) {
         return headerVisible() ? mList.get(i - 1) : mList.get(i);
     }
 
-    public void add(UserObject model) {
+    public void add(UserModel model) {
         mList.add(model);
     }
 
-    public void remove(UserObject model) {
+    public void remove(UserModel model) {
         mList.remove(model);
     }
 
-    public void add(List<UserObject> models) {
+    public void add(List<UserModel> models) {
         mList.addAll(models);
     }
 
-    public void remove(List<UserObject> models) {
+    public void remove(List<UserModel> models) {
         mList.beginBatchedUpdates();
-        for (UserObject model : models) {
+        for (UserModel model : models) {
             mList.remove(model);
         }
         mList.endBatchedUpdates();
     }
 
-    public void replaceAll(List<UserObject> models) {
+    public void replaceAll(List<UserModel> models) {
         mList.beginBatchedUpdates();
 
 //        int length = mList.size();
 //        for (int i = length - 1; i >= 0; i--) {
-//            final UserObject model = mList.get(i);
+//            final UserModel model = mList.get(i);
 //            if (!models.contains(model)) {
 //                mList.remove(model);
 //            }
@@ -151,7 +150,7 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
      * Deletes all but one user
      * @param user the user to keep
      */
-    public void replaceOne(UserObject user) {
+    public void replaceOne(UserModel user) {
         mList.beginBatchedUpdates();
 
         mList.clear();
@@ -216,7 +215,7 @@ public class UserAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             UserViewHolder userViewHolder = (UserViewHolder)viewHolder;
 
             // Minus 1 because of the header
-            UserObject obj = getItem(i);
+            UserModel obj = getItem(i);
             String name = obj.getName();
 
             // Create a new TextDrawable for our image's background

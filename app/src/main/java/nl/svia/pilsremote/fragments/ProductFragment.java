@@ -32,8 +32,9 @@ import java.util.List;
 
 import nl.svia.pilsremote.R;
 import nl.svia.pilsremote.adapters.ProductAdapter;
+import nl.svia.pilsremote.misc.Backable;
 import nl.svia.pilsremote.misc.NetworkFragmentGetter;
-import nl.svia.pilsremote.misc.ProductObject;
+import nl.svia.pilsremote.misc.ProductModel;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -45,6 +46,8 @@ public class ProductFragment extends Fragment implements Backable {
     private static final String ARGUMENT_USER_ID = "ARG_USER_ID";
     private static final String ARGUMENT_PIN = "ARG_PIN";
 
+    private static final String SAVED_FLAG = "SAVED_STATE_FLAG";
+
     private NetworkFragment mNetworkFragment;
 
     private ProgressBar mProgressBar;
@@ -54,13 +57,15 @@ public class ProductFragment extends Fragment implements Backable {
 
     private ProductAdapter mProductAdapter;
 
-    private List<ProductObject> mProductList;
+    private List<ProductModel> mProductList;
 
     private ProductAdapter.HeaderViewHolder mHeaderView;
 
     private int mUserId;
     private int mPin;
     private double mBalance;
+
+    private SharedPreferences mSharedPrefs;
 
     public ProductFragment() {
         // Required empty public constructor
@@ -132,6 +137,7 @@ public class ProductFragment extends Fragment implements Backable {
 
                         if (mProductAdapter == null) {
                             createAdapter();
+                            Log.d(TAG, "created adapter " + mProductList.size());
                         } else {
                             mProductAdapter.add(mProductList);
                         }
@@ -154,7 +160,7 @@ public class ProductFragment extends Fragment implements Backable {
         mProductAdapter = new ProductAdapter(getContext(), new ProductAdapter.ProductViewHolderListener() {
             @Override
             public void onItemClick(View view, int i) {
-                ProductObject product = mProductAdapter.getItem(i);
+                ProductModel product = mProductAdapter.getItem(i);
                 Log.d(TAG, "Pressed: " + product.toString());
             }
         }, new ProductAdapter.HeaderViewHolderListener() {
@@ -168,19 +174,29 @@ public class ProductFragment extends Fragment implements Backable {
         mRecyclerView.setAdapter(mProductAdapter);
     }
 
-    private List<ProductObject> parseProducts(final JSONObject products) {
-        List<ProductObject> productList = new ArrayList<>();
+    private List<ProductModel> parseProducts(final JSONObject products) {
+        List<ProductModel> productList = new ArrayList<>();
         Iterator<String> iter = products.keys();
+
+        boolean beerOnly = mSharedPrefs.getBoolean(
+                getActivity().getString(R.string.key_beer_only), true);
+
         while (iter.hasNext()) {
             String key = iter.next();
             try {
                 JSONObject obj = products.getJSONObject(key);
 
-                int id = obj.getInt("id");
                 String name = obj.getString("name");
+
+                if (beerOnly &&
+                        !name.toLowerCase().contains(getString(R.string.beer_search_value))) {
+                    continue;
+                }
+
+                int id = obj.getInt("id");
                 double price = obj.getDouble("price");
 
-                productList.add(new ProductObject(id, name, price));
+                productList.add(new ProductModel(id, name, price));
 
             } catch (JSONException ignored) {
                 // Just don't add it to the lsit
@@ -193,6 +209,8 @@ public class ProductFragment extends Fragment implements Backable {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.d(TAG, "on create called");
 
         Bundle bundle = getArguments();
 
@@ -208,6 +226,8 @@ public class ProductFragment extends Fragment implements Backable {
         }
 
         setHasOptionsMenu(true);
+
+        mSharedPrefs = getActivity().getPreferences(Context.MODE_PRIVATE);
     }
 
     @Override
@@ -223,6 +243,11 @@ public class ProductFragment extends Fragment implements Backable {
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        if (mProductAdapter != null) {
+            // We are restoring from backstack, set the adapter
+            mRecyclerView.setAdapter(mProductAdapter);
+        }
 
         setLoading(true, null);
 
@@ -278,32 +303,13 @@ public class ProductFragment extends Fragment implements Backable {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                final List<ProductObject> filtered = filter(newText);
+                if (newText == null || mProductAdapter == null) {
+                    return false;
+                }
+
+                final List<ProductModel> filtered = filter(newText);
                 mProductAdapter.replaceAll(filtered);
                 mRecyclerView.scrollToPosition(0);
-                return true;
-            }
-        });
-
-        final MenuItem refreshButton = menu.findItem(R.id.action_refresh);
-        refreshButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                updateBalanceAndProducts();
-                return true;
-            }
-        });
-
-        final MenuItem resetButton = menu.findItem(R.id.action_reset);
-        resetButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                SharedPreferences sharedPrefs = getActivity().getPreferences(Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPrefs.edit();
-                editor.putInt(getString(R.string.pref_user_id), -1);
-                editor.putInt(getString(R.string.pref_pin), -1);
-                editor.commit();
-
                 return true;
             }
         });
@@ -311,15 +317,28 @@ public class ProductFragment extends Fragment implements Backable {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    private List<ProductObject> filter(String query) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.action_refresh:
+                updateBalanceAndProducts();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private List<ProductModel> filter(String query) {
         if (mProductList == null) {
             return new ArrayList<>();
         }
 
         final String lowerCaseQuery = query.toLowerCase();
 
-        final List<ProductObject> filteredModelList = new ArrayList<>();
-        for (ProductObject product : mProductList) {
+        final List<ProductModel> filteredModelList = new ArrayList<>();
+        for (ProductModel product : mProductList) {
             final String text = product.getName().toLowerCase();
             if (text.contains(lowerCaseQuery)) {
                 filteredModelList.add(product);

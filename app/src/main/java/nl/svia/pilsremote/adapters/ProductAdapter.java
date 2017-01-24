@@ -7,21 +7,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import com.amulyakhare.textdrawable.TextDrawable;
-
-import org.w3c.dom.Text;
 
 import java.util.Comparator;
 import java.util.List;
 
 import nl.svia.pilsremote.R;
-import nl.svia.pilsremote.misc.ProductObject;
+import nl.svia.pilsremote.misc.ProductModel;
 
 public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = "ProductAdapter";
@@ -33,17 +25,17 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final static int TYPE_HEADER = 0;
     private final static int TYPE_USER = 1;
 
-    private Comparator<ProductObject> mComparator = new Comparator<ProductObject>() {
+    private Comparator<ProductModel> mComparator = new Comparator<ProductModel>() {
         @Override
-        public int compare(ProductObject a, ProductObject b) {
+        public int compare(ProductModel a, ProductModel b) {
             return a.getName().compareTo(b.getName());
         }
     };
 
-    private final SortedList<ProductObject> mList = new SortedList<>(ProductObject.class,
-            new SortedList.Callback<ProductObject>() {
+    private final SortedList<ProductModel> mList = new SortedList<>(ProductModel.class,
+            new SortedList.Callback<ProductModel>() {
                 @Override
-                public int compare(ProductObject a, ProductObject b) {
+                public int compare(ProductModel a, ProductModel b) {
                     return mComparator.compare(a, b);
                 }
 
@@ -68,12 +60,12 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
 
                 @Override
-                public boolean areContentsTheSame(ProductObject oldItem, ProductObject newItem) {
+                public boolean areContentsTheSame(ProductModel oldItem, ProductModel newItem) {
                     return oldItem.equals(newItem);
                 }
 
                 @Override
-                public boolean areItemsTheSame(ProductObject item1, ProductObject item2) {
+                public boolean areItemsTheSame(ProductModel item1, ProductModel item2) {
                     return item1.getId() == item2.getId();
                 }
             });
@@ -100,31 +92,31 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    public ProductObject getItem(int i) {
+    public ProductModel getItem(int i) {
         return mList.get(i - 1);
     }
 
-    public void add(ProductObject model) {
+    public void add(ProductModel model) {
         mList.add(model);
     }
 
-    public void remove(ProductObject model) {
+    public void remove(ProductModel model) {
         mList.remove(model);
     }
 
-    public void add(List<ProductObject> models) {
+    public void add(List<ProductModel> models) {
         mList.addAll(models);
     }
 
-    public void remove(List<ProductObject> models) {
+    public void remove(List<ProductModel> models) {
         mList.beginBatchedUpdates();
-        for (ProductObject model : models) {
+        for (ProductModel model : models) {
             mList.remove(model);
         }
         mList.endBatchedUpdates();
     }
 
-    public void replaceAll(List<ProductObject> models) {
+    public void replaceAll(List<ProductModel> models) {
         mList.beginBatchedUpdates();
 
         mList.clear();
@@ -137,7 +129,7 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
      *
      * @param user the user to keep
      */
-    public void replaceOne(ProductObject user) {
+    public void replaceOne(ProductModel user) {
         mList.beginBatchedUpdates();
 
         mList.clear();
@@ -170,7 +162,7 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ProductViewHolder userViewHolder = (ProductViewHolder) viewHolder;
 
             // Minus 1 because of the header
-            ProductObject obj = getItem(i);
+            ProductModel obj = getItem(i);
             String name = obj.getName();
 
             userViewHolder.title.setText(name);

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/category_general">
+        <CheckBoxPreference
+            android:key="@string/key_beer_only"
+            android:title="@string/beer_only_title"
+            android:summary="@string/beer_only_summary"
+            android:defaultValue="true"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/category_permanent">
+
+        <Preference android:title="@string/logout_title"
+            android:key="@string/key_logout"
+            android:summary="@string/logout_summary"/>
+    </PreferenceCategory>
+</PreferenceScreen>

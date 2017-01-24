@@ -32,8 +32,9 @@ import java.util.List;
 
 import nl.svia.pilsremote.R;
 import nl.svia.pilsremote.adapters.UserAdapter;
+import nl.svia.pilsremote.misc.Backable;
 import nl.svia.pilsremote.misc.NetworkFragmentGetter;
-import nl.svia.pilsremote.misc.UserObject;
+import nl.svia.pilsremote.misc.UserModel;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -56,7 +57,7 @@ public class LoginFragment extends Fragment implements Backable {
 
     private UserAdapter mUserAdapter;
 
-    private List<UserObject> mUserList;
+    private List<UserModel> mUserList;
 
     // For logging in
     private int mUserId;
@@ -96,24 +97,55 @@ public class LoginFragment extends Fragment implements Backable {
         }
     }
 
-    private void createAdapter(JSONArray users) {
-        mUserList = new ArrayList<>();
+    private void updateUsers() {
+        setLoading(true, null);
+
+        mNetworkFragment.getUsers(new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                mUserList = parseUsers(response);
+
+                if (mUserAdapter == null) {
+                    createAdapter();
+                } else {
+                    mUserAdapter.add(mUserList);
+                }
+
+                mRecyclerView.scrollToPosition(0);
+                setLoading(false, null);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Error getting users: " + error.toString());
+                setLoading(false, getContext().getString(R.string.get_users_error));
+            }
+        });
+    }
+
+    private List<UserModel> parseUsers(final JSONArray users) {
+        List<UserModel> userList = new ArrayList<>();
+
         for (int i = 0; i < users.length(); i++) {
             try {
                 JSONObject obj = users.getJSONObject(i);
                 int id = obj.getInt("id");
                 String name = obj.getString("name");
 
-                mUserList.add(new UserObject(id, name));
+                userList.add(new UserModel(id, name));
             } catch (JSONException ignored) {
                 // Just don't add the invalid user to the list
             }
         }
 
+        return userList;
+    }
+
+    private void createAdapter() {
         mUserAdapter = new UserAdapter(getContext(), new UserAdapter.UserViewHolderListener() {
             @Override
             public void onItemClick(View view, int i) {
-                UserObject user = mUserAdapter.getItem(i);
+                UserModel user = mUserAdapter.getItem(i);
                 Log.d(TAG, "Pressed: " + user.getName() + ", " + user.getId());
                 mUserAdapter.replaceOne(user);
             }
@@ -130,6 +162,10 @@ public class LoginFragment extends Fragment implements Backable {
                     @Override
                     public void onResponse(Double balance) {
                         Log.d(TAG, "Succesful login " + balance);
+
+                        // Reset searchView, so the next fragment doesn't have to deal with it.
+                        mSearchView.setQuery(null, false);
+                        mSearchView.setIconified(true);
                         setLoading(false, null);
                         ((OnLoggedInListener) getActivity()).onLoggedIn(mUserId, mPin);
                     }
@@ -178,18 +214,7 @@ public class LoginFragment extends Fragment implements Backable {
     public void onStart() {
         super.onStart();
 
-        mNetworkFragment.getUsers(new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response) {
-                createAdapter(response);
-                setLoading(false, null);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                setLoading(false, getContext().getString(R.string.get_users_error));
-            }
-        });
+        updateUsers();
     }
 
     @Override
@@ -244,7 +269,11 @@ public class LoginFragment extends Fragment implements Backable {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                final List<UserObject> filtered = filter(newText);
+                if (newText == null || mUserAdapter == null) {
+                    return false;
+                }
+
+                final List<UserModel> filtered = filter(newText);
                 mUserAdapter.replaceAll(filtered);
                 mRecyclerView.scrollToPosition(0);
                 return true;
@@ -254,11 +283,24 @@ public class LoginFragment extends Fragment implements Backable {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    private List<UserObject> filter(String query) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.action_refresh:
+                updateUsers();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private List<UserModel> filter(String query) {
         final String lowerCaseQuery = query.toLowerCase();
 
-        final List<UserObject> filteredModelList = new ArrayList<>();
-        for (UserObject user : mUserList) {
+        final List<UserModel> filteredModelList = new ArrayList<>();
+        for (UserModel user : mUserList) {
             final String text = user.getName().toLowerCase();
             if (text.contains(lowerCaseQuery)) {
                 filteredModelList.add(user);
@@ -273,7 +315,7 @@ public class LoginFragment extends Fragment implements Backable {
 
         if (mUserAdapter.footerVisible()) {
             mUserAdapter.replaceAll(mUserList);
-            mSearchView.setQuery("", false);
+            mSearchView.setQuery(null, false);
             mSearchView.setIconified(true);
 
             if (mEditText != null) {
