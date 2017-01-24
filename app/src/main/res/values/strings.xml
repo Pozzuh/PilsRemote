@@ -15,4 +15,6 @@
     <string name="pref_user_id">PREF_USER_ID</string>
     <string name="pref_pin">PREF_PIN</string>
     <string name="product_header_balance">Current saldo: €%.2f</string>
+    <string name="product_price">€%.2f</string>
+    <string name="action_refresh">Refresh</string>
 </resources>

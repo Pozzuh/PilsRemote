@@ -126,10 +126,10 @@ public class LoginFragment extends Fragment implements Backable {
                 mPin = pin;
                 mEditText = editText;
 
-                mNetworkFragment.getBalance(pin, userId, new Response.Listener<String>() {
+                mNetworkFragment.getBalance(pin, userId, new Response.Listener<Double>() {
                     @Override
-                    public void onResponse(String response) {
-                        Log.d(TAG, "Succesful login " + response);
+                    public void onResponse(Double balance) {
+                        Log.d(TAG, "Succesful login " + balance);
                         setLoading(false, null);
                         ((OnLoggedInListener) getActivity()).onLoggedIn(mUserId, mPin);
                     }

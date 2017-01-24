@@ -5,10 +5,10 @@ public class ProductObject {
     private String mName;
     private double mPrice;
 
-    public ProductObject(int id, String name, double mPrice) {
+    public ProductObject(int id, String name, double price) {
         mId = id;
         mName = name;
-        mPrice = mPrice;
+        mPrice = price;
     }
 
     public int getId() {

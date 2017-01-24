@@ -17,14 +17,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -57,6 +55,8 @@ public class ProductFragment extends Fragment implements Backable {
     private ProductAdapter mProductAdapter;
 
     private List<ProductObject> mProductList;
+
+    private ProductAdapter.HeaderViewHolder mHeaderView;
 
     private int mUserId;
     private int mPin;
@@ -101,17 +101,16 @@ public class ProductFragment extends Fragment implements Backable {
         }
     }
 
-    private void updateBalance() {
-        mNetworkFragment.getBalance(mPin, mUserId, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                ProductAdapter.HeaderViewHolder header = (ProductAdapter.HeaderViewHolder)
-                        mRecyclerView.findViewHolderForLayoutPosition(0);
+    private void updateBalanceText() {
+        mHeaderView.getBalanceText().setText(getString(R.string.product_header_balance, mBalance));
+    }
 
-                mBalance = Double.parseDouble(response);
-                header.getBalanceText().setText(getString(R.string.product_header_balance, mBalance));
-                header.setLoading(false);
-                Log.d(TAG, "Updated balance " + header.toString());
+    private void updateBalance() {
+        mNetworkFragment.getBalance(mPin, mUserId, new Response.Listener<Double>() {
+            @Override
+            public void onResponse(Double response) {
+                mBalance = response;
+                updateBalanceText();
             }
         }, new Response.ErrorListener() {
             @Override
@@ -119,10 +118,58 @@ public class ProductFragment extends Fragment implements Backable {
                 Log.d(TAG, "Couldn't update balance!");
             }
         });
+
     }
 
-    private void createAdapter(final JSONObject products) {
-        mProductList = new ArrayList<>();
+    private void updateBalanceAndProducts() {
+        setLoading(true, null);
+
+        mNetworkFragment.getBalanceAndProducts(mPin, mUserId,
+                new Response.Listener<NetworkFragment.BalanceProductPair>() {
+                    @Override
+                    public void onResponse(NetworkFragment.BalanceProductPair response) {
+                        mProductList = parseProducts(response.products);
+
+                        if (mProductAdapter == null) {
+                            createAdapter();
+                        } else {
+                            mProductAdapter.add(mProductList);
+                        }
+
+                        mRecyclerView.scrollToPosition(0);
+
+                        mBalance = response.balance;
+                        setLoading(false, null);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, "Product data could not be loaded: " + error.toString());
+                        setLoading(false, getContext().getString(R.string.get_products_error));
+                    }
+                });
+    }
+
+    private void createAdapter() {
+        mProductAdapter = new ProductAdapter(getContext(), new ProductAdapter.ProductViewHolderListener() {
+            @Override
+            public void onItemClick(View view, int i) {
+                ProductObject product = mProductAdapter.getItem(i);
+                Log.d(TAG, "Pressed: " + product.toString());
+            }
+        }, new ProductAdapter.HeaderViewHolderListener() {
+            @Override
+            public void onCreated(ProductAdapter.HeaderViewHolder headerViewHolder) {
+                mHeaderView = headerViewHolder;
+                updateBalanceText();
+            }
+        });
+        mProductAdapter.add(mProductList);
+        mRecyclerView.setAdapter(mProductAdapter);
+    }
+
+    private List<ProductObject> parseProducts(final JSONObject products) {
+        List<ProductObject> productList = new ArrayList<>();
         Iterator<String> iter = products.keys();
         while (iter.hasNext()) {
             String key = iter.next();
@@ -133,16 +180,14 @@ public class ProductFragment extends Fragment implements Backable {
                 String name = obj.getString("name");
                 double price = obj.getDouble("price");
 
-                mProductList.add(new ProductObject(id, name, price));
+                productList.add(new ProductObject(id, name, price));
 
             } catch (JSONException ignored) {
                 // Just don't add it to the lsit
             }
         }
 
-        Log.d(TAG, "length/." + mProductList.size());
-
-        mProductAdapter.add(mProductList);
+        return productList;
     }
 
     @Override
@@ -187,31 +232,7 @@ public class ProductFragment extends Fragment implements Backable {
     @Override
     public void onStart() {
         super.onStart();
-
-        mProductAdapter = new ProductAdapter(getContext(), new ProductAdapter.ProductViewHolderListener() {
-            @Override
-            public void onItemClick(View view, int i) {
-                ProductObject product = mProductAdapter.getItem(i);
-                Log.d(TAG, "Pressed: " + product.toString());
-            }
-        });
-        mRecyclerView.setAdapter(mProductAdapter);
-
-        mNetworkFragment.getProducts(new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                createAdapter(response);
-                mRecyclerView.scrollToPosition(0);
-                setLoading(false, null);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                setLoading(false, getContext().getString(R.string.get_products_error));
-            }
-        });
-
-        updateBalance();
+        updateBalanceAndProducts();
     }
 
     @Override
@@ -260,6 +281,15 @@ public class ProductFragment extends Fragment implements Backable {
                 final List<ProductObject> filtered = filter(newText);
                 mProductAdapter.replaceAll(filtered);
                 mRecyclerView.scrollToPosition(0);
+                return true;
+            }
+        });
+
+        final MenuItem refreshButton = menu.findItem(R.id.action_refresh);
+        refreshButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                updateBalanceAndProducts();
                 return true;
             }
         });

@@ -24,8 +24,11 @@ import nl.svia.pilsremote.R;
 import nl.svia.pilsremote.misc.ProductObject;
 
 public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private static final String TAG = "ProductAdapter";
+
     private Context mContext;
     private ProductViewHolderListener mProductViewHolderListener;
+    private HeaderViewHolderListener mHeaderViewHolderListener;
 
     private final static int TYPE_HEADER = 0;
     private final static int TYPE_USER = 1;
@@ -75,9 +78,13 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
             });
 
-    public ProductAdapter(Context context, ProductViewHolderListener userListener) {
+    public ProductAdapter(Context context, ProductViewHolderListener userListener,
+                          HeaderViewHolderListener headerListener) {
         this.mContext = context;
         this.mProductViewHolderListener = userListener;
+        this.mHeaderViewHolderListener = headerListener;
+
+        Log.d(TAG, "Product adapter created");
     }
 
     @Override
@@ -146,8 +153,9 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         Context c = viewGroup.getContext();
 
         if (viewType == TYPE_HEADER) {
+            Log.d(TAG, "oncreate viewholder header");
             v = LayoutInflater.from(c).inflate(R.layout.list_item_product_header, viewGroup, false);
-            return new HeaderViewHolder(v);
+            return new HeaderViewHolder(v, mHeaderViewHolderListener);
         } else {
             // TYPE_PRODUCT
             v = LayoutInflater.from(c).inflate(R.layout.list_item_product, viewGroup, false);
@@ -166,9 +174,8 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             String name = obj.getName();
 
             userViewHolder.title.setText(name);
-            userViewHolder.price.setText("€" + obj.getPrice());
+            userViewHolder.price.setText(mContext.getString(R.string.product_price, obj.getPrice()));
         }
-
     }
 
     @Override
@@ -200,33 +207,22 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     public class HeaderViewHolder extends RecyclerView.ViewHolder {
+        private HeaderViewHolderListener mListener;
         private TextView mBalanceText;
-        private ProgressBar mProgressBar;
 
-        public HeaderViewHolder(View itemView) {
+        public HeaderViewHolder(View itemView, HeaderViewHolderListener listener) {
             super(itemView);
 
             mBalanceText = (TextView) itemView.findViewById(R.id.balanceText);
-            mProgressBar = (ProgressBar) itemView.findViewById(R.id.progressBar);
+            mListener = listener;
+            mListener.onCreated(this);
+            Log.d("ProductAdapter", "new HeaderViewHolder");
         }
 
-        public void setLoading(boolean flag) {
-            Log.d("ProductAdapter", "set loading header: " + flag);
-            if (flag) {
-                mProgressBar.setVisibility(View.VISIBLE);
-                mBalanceText.setVisibility(View.INVISIBLE);
-            } else {
-                mProgressBar.setVisibility(View.INVISIBLE);
-                mBalanceText.setVisibility(View.VISIBLE);
-            }
-        }
+
 
         public TextView getBalanceText() {
             return mBalanceText;
-        }
-
-        public ProgressBar getProgressBar() {
-            return mProgressBar;
         }
     }
 
@@ -234,4 +230,7 @@ public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         void onItemClick(View view, int index);
     }
 
+    public interface HeaderViewHolderListener {
+        void onCreated(HeaderViewHolder headerViewHolder);
+    }
 }

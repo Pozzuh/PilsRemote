@@ -5,10 +5,12 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.provider.DocumentFile;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
@@ -28,6 +30,11 @@ public class NetworkFragment extends Fragment {
 
     private RequestQueue mRequestQueue;
 
+    // Helper variables for getBalanceAndProducts
+    private Double mBalance = null;
+    private JSONObject mProducts = null;
+    private boolean mBalanceAndProductsErrorCalled = false;
+    private boolean mBalanceAndProductsSuccessCalled = false;
 
     /**
      * Static initializer for NetworkFragment that sets the URL of the host it will be downloading
@@ -73,7 +80,8 @@ public class NetworkFragment extends Fragment {
     @Override
     public void onDestroy() {
         // Cancel task when Fragment is destroyed.
-        cancelDownload();
+        // TODO: is this stop call correct?
+        mRequestQueue.stop();
         super.onDestroy();
     }
 
@@ -87,13 +95,23 @@ public class NetworkFragment extends Fragment {
 
     }
 
-    public void getBalance(int pin, int user, Response.Listener<String> responseListener,
-                            Response.ErrorListener errorListener) {
+    public void getBalance(int pin, int user, final Response.Listener<Double> responseListener,
+                           final Response.ErrorListener errorListener) {
         // Request a string response from the provided URL.
         String url = String.format(URL_GET_BALANCE, pin, user);
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                responseListener, errorListener);
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if (response.isEmpty()) {
+                            errorListener.onErrorResponse(new VolleyError("Balance is empty."));
+                        } else {
+                            responseListener.onResponse(Double.parseDouble(response));
+                        }
+                    }
+
+                }, errorListener);
 
         mRequestQueue.add(stringRequest);
 
@@ -107,11 +125,31 @@ public class NetworkFragment extends Fragment {
         mRequestQueue.add(jsonObjectRequest);
     }
 
+    public void getBalanceAndProducts(int pin, int user,
+                                      final Response.Listener<BalanceProductPair> responseListener,
+                                      final Response.ErrorListener errorListener) {
 
-    /**
-     * Cancel (and interrupt if necessary) any ongoing DownloadTask execution.
-     */
-    public void cancelDownload() {
+        getBalance(pin, user, new Response.Listener<Double>() {
+            @Override
+            public void onResponse(final Double balance) {
+                getProducts(new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject products) {
+                        BalanceProductPair pair = new BalanceProductPair(balance, products);
+                        responseListener.onResponse(pair);
+                    }
+                }, errorListener);
+            }
+        }, errorListener);
+    }
 
+    static class BalanceProductPair {
+        public double balance;
+        public JSONObject products;
+
+        public BalanceProductPair(double b, JSONObject p) {
+            balance = b;
+            products = p;
+        }
     }
 }
