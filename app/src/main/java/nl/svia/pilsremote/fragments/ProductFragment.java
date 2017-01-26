@@ -1,6 +1,7 @@
 package nl.svia.pilsremote.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -20,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -46,8 +48,6 @@ public class ProductFragment extends Fragment implements Backable {
     private static final String TAG = "ProductFragment";
     private static final String ARGUMENT_USER_ID = "ARG_USER_ID";
     private static final String ARGUMENT_PIN = "ARG_PIN";
-
-    private static final String SAVED_FLAG = "SAVED_STATE_FLAG";
 
     private NetworkFragment mNetworkFragment;
 
@@ -108,13 +108,18 @@ public class ProductFragment extends Fragment implements Backable {
     }
 
     private void updateBalanceText() {
+        // TODO balance text won't be updated if search is active
         mHeaderView.getBalanceText().setText(getString(R.string.product_header_balance, mBalance));
+        Log.d(TAG, "Set balance text");
     }
 
     private void updateBalance() {
+        Log.d(TAG, "Updating balance");
+
         mNetworkFragment.getBalance(mPin, mUserId, new Response.Listener<Double>() {
             @Override
             public void onResponse(Double response) {
+                Log.d(TAG, "Update balance response " + String.valueOf(response));
                 mBalance = response;
                 updateBalanceText();
             }
@@ -129,6 +134,12 @@ public class ProductFragment extends Fragment implements Backable {
 
     private void updateBalanceAndProducts() {
         setLoading(true, null);
+
+        if (mNetworkFragment == null) {
+            // This sometimes happens, but only during debugging (?)
+            Log.e(TAG, "mNetworkFragment was null!");
+            setLoading(false, getContext().getString(R.string.get_products_error));
+        }
 
         mNetworkFragment.getBalanceAndProducts(mPin, mUserId,
                 new Response.Listener<NetworkFragment.BalanceProductPair>() {
@@ -169,6 +180,25 @@ public class ProductFragment extends Fragment implements Backable {
             public void onItemClick(View view, int i) {
                 ProductModel product = mProductAdapter.getItem(i);
                 Log.d(TAG, "Pressed: " + product.toString());
+
+                Bundle b = product.getBundle();
+                PurchaseDialogFragment fragment = PurchaseDialogFragment.newInstance(mUserId, b);
+                fragment.show(getActivity().getSupportFragmentManager(), "PurchaseDialogFragment");
+
+                fragment.SetOnPurchaseListener(new PurchaseDialogFragment.OnPurchaseListener() {
+                    @Override
+                    public void onPurchase(ProductModel product, int amount) {
+                        Toast toast = Toast.makeText(getContext(),
+                                getString(R.string.purchase_success, amount, product.getName()),
+                                Toast.LENGTH_SHORT);
+
+                        toast.show();
+
+                        ProductFragment.this.updateBalance();
+
+                    }
+                });
+
             }
         }, new ProductAdapter.HeaderViewHolderListener() {
             @Override

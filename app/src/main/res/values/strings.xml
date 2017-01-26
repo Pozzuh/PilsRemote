@@ -16,4 +16,12 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_settings">Settings</string>
     <string name="beer_search_value">bier</string>
+    <string name="confirm_purchase_hint">Please confirm your purchase</string>
+    <string name="confirm_purchase">Purchase</string>
+    <string name="cancel_purchase">Cancel</string>
+    <string name="purchase_enter_pincode_hint">Pincode:</string>
+    <string name="purchase_price_hint">Price: €%.2f</string>
+    <string name="purchase_failed">Unable to purchase product.</string>
+    <string name="purchase_success">Successfully purchased %1$d %2$s!</string>
+
 </resources>

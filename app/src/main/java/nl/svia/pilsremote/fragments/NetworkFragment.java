@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.provider.DocumentFile;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -19,6 +20,8 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 /**
  * Implementation of headless Fragment that runs an AsyncTask to fetch data from the network.
  */
@@ -26,6 +29,7 @@ public class NetworkFragment extends Fragment {
     public static final String URL_GET_USERS = "http://dev.automatis.nl/pos/api/?action=get_users&asArray";
     public static final String URL_GET_PRODUCTS = "http://dev.automatis.nl/pos/api/?action=get_products";
     public static final String URL_GET_BALANCE = "http://dev.automatis.nl/pos/api/?action=get_user_balance&pin=%d&user=%d";
+    public static final String URL_GET_BUY_PRODUCT = "http://dev.automatis.nl/pos/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=kelder_bier_app&forUser=0&method=list&pincode=%d&user=%d";
     public static final String TAG = "NetworkFragment";
 
     private RequestQueue mRequestQueue;
@@ -123,6 +127,41 @@ public class NetworkFragment extends Fragment {
                 null, responseListener, errorListener);
 
         mRequestQueue.add(jsonObjectRequest);
+    }
+
+    public void buyProducts(int pin, int user, int productId, int amount,
+                            final Response.Listener<Boolean> responseListener,
+                            final Response.ErrorListener errorListener) {
+//        String url = String.format(URL_GET_BALANCE, pin, user);
+
+        // Cart syntax:
+        // { "<ID>" : <amount> }
+
+        HashMap<String, Integer> cart = new HashMap<>();
+        cart.put(String.valueOf(productId), amount);
+        JSONObject obj = new JSONObject(cart);
+
+        String url = String.format(URL_GET_BUY_PRODUCT, obj.toString(), pin, user);
+
+        Log.d(TAG, "cart:" + obj.toString());
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "Buy response: " + response);
+                        responseListener.onResponse(true);
+                    }
+
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d(TAG, "Buy error: " + error.toString());
+                errorListener.onErrorResponse(error);
+            }
+        });
+
+        mRequestQueue.add(stringRequest);
     }
 
     public void getBalanceAndProducts(int pin, int user,

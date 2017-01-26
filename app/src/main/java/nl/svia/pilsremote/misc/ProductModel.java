@@ -1,6 +1,12 @@
 package nl.svia.pilsremote.misc;
 
+import android.os.Bundle;
+
 public class ProductModel {
+    private static final String BUNDLE_ID = "PRODUCT_ID";
+    private static final String BUNDLE_NAME = "PRODUCT_NAME";
+    private static final String BUNDLE_PRICE = "PRODUCT_PRICE";
+
     private int mId;
     private String mName;
     private double mPrice;
@@ -21,6 +27,24 @@ public class ProductModel {
 
     public double getPrice() {
         return mPrice;
+    }
+
+    public Bundle getBundle() {
+        Bundle b = new Bundle();
+
+        b.putInt(BUNDLE_ID, this.mId);
+        b.putString(BUNDLE_NAME, this.mName);
+        b.putDouble(BUNDLE_PRICE, this.mPrice);
+
+        return b;
+    }
+
+    public static ProductModel fromBundle(Bundle b) {
+        int id = b.getInt(BUNDLE_ID);
+        String name = b.getString(BUNDLE_NAME);
+        double price = b.getDouble(BUNDLE_PRICE);
+
+        return new ProductModel(id, name, price);
     }
 
     @Override
