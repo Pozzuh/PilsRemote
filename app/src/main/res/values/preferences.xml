@@ -11,4 +11,9 @@
     <string name="category_permanent">Permanent</string>
     <string name="logout_title">Logout</string>
     <string name="logout_summary">This will log you out and close the app.</string>
+    <string name="key_ask_pin">PREF_ASK_PIN</string>
+    <string name="ask_pin_title">Ask for pin</string>
+    <string name="ask_pin_summary">Ask for your pin code every time you buy a product.</string>
+    <bool name="ask_pin_default">true</bool>
+
 </resources>

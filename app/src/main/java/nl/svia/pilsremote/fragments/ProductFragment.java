@@ -182,7 +182,7 @@ public class ProductFragment extends Fragment implements Backable {
                 Log.d(TAG, "Pressed: " + product.toString());
 
                 Bundle b = product.getBundle();
-                PurchaseDialogFragment fragment = PurchaseDialogFragment.newInstance(mUserId, b);
+                PurchaseDialogFragment fragment = PurchaseDialogFragment.newInstance(mUserId, b, mPin);
                 fragment.show(getActivity().getSupportFragmentManager(), "PurchaseDialogFragment");
 
                 fragment.SetOnPurchaseListener(new PurchaseDialogFragment.OnPurchaseListener() {

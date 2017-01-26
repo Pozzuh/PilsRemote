@@ -3,6 +3,11 @@
     <PreferenceCategory
         android:title="@string/category_general">
         <CheckBoxPreference
+            android:key="@string/key_ask_pin"
+            android:title="@string/ask_pin_title"
+            android:summary="@string/ask_pin_summary"
+            android:defaultValue="@bool/ask_pin_default" />
+        <CheckBoxPreference
             android:key="@string/key_beer_only"
             android:title="@string/beer_only_title"
             android:summary="@string/beer_only_summary"

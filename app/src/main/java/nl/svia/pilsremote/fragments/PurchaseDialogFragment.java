@@ -3,11 +3,13 @@ package nl.svia.pilsremote.fragments;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +34,7 @@ public class PurchaseDialogFragment extends DialogFragment
     private static final String TAG = "PurchaseDialogFragment";
     private static final String ARGUMENT_USER_ID = "ARG_USER_ID";
     private static final String ARGUMENT_PRODUCT = "ARG_PRODUCT";
+    private static final String ARGUMENT_PIN = "ARG_PIN";
 
     private NetworkFragment mNetworkFragment;
 
@@ -48,6 +51,11 @@ public class PurchaseDialogFragment extends DialogFragment
 
     private ProductModel mProduct;
     private int mUserId;
+    private int mPin;
+
+    private SharedPreferences mSharedPrefs;
+
+    private boolean mNeedPin;
 
     private OnPurchaseListener mListener;
 
@@ -55,11 +63,17 @@ public class PurchaseDialogFragment extends DialogFragment
         // Empty constructor
     }
 
-    public static PurchaseDialogFragment newInstance(int userId, Bundle product) {
+    public static PurchaseDialogFragment newInstance(int userId, Bundle product,
+                                                     @Nullable Integer pin) {
         PurchaseDialogFragment fragment = new PurchaseDialogFragment();
         Bundle bundle = new Bundle();
         bundle.putInt(ARGUMENT_USER_ID, userId);
         bundle.putBundle(ARGUMENT_PRODUCT, product);
+
+        if (pin != null) {
+            bundle.putInt(ARGUMENT_PIN, pin);
+        }
+
         fragment.setArguments(bundle);
 
         return fragment;
@@ -83,6 +97,17 @@ public class PurchaseDialogFragment extends DialogFragment
     }
 
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+        mNeedPin = mSharedPrefs.getBoolean(
+                getActivity().getString(R.string.key_ask_pin),
+                getContext().getResources().getBoolean(R.bool.ask_pin_default));
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -90,6 +115,7 @@ public class PurchaseDialogFragment extends DialogFragment
 
         mUserId = args.getInt(ARGUMENT_USER_ID);
         mProduct = ProductModel.fromBundle(args.getBundle(ARGUMENT_PRODUCT));
+        mPin = args.getInt(ARGUMENT_PIN, -1);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         // Get the layout inflater
@@ -111,6 +137,10 @@ public class PurchaseDialogFragment extends DialogFragment
 
         mProductNameView.setText(mProduct.getName());
         mProductPriceView.setText(getString(R.string.purchase_price_hint, mProduct.getPrice()));
+
+        if (!mNeedPin) {
+            mPincodePicker.setVisibility(View.GONE);
+        }
 
         mAmountView.setOnValueChangeListener(new AmountPicker.OnValueChangeListener() {
             @Override
@@ -154,13 +184,17 @@ public class PurchaseDialogFragment extends DialogFragment
                 alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(false);
 
                 int pin;
-                try {
-                    pin = Integer.parseInt(mPinView.getText().toString());
-                } catch (Exception ignored) {
-                    mPinView.setError(getString(R.string.invalid_pincode));
-                    alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
-                    alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(true);
-                    return;
+                if (mNeedPin) {
+                    try {
+                        pin = Integer.parseInt(mPinView.getText().toString());
+                    } catch (Exception ignored) {
+                        mPinView.setError(getString(R.string.invalid_pincode));
+                        alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
+                        alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(true);
+                        return;
+                    }
+                } else {
+                    pin = mPin;
                 }
 
                 PurchaseDialogFragment.this.setLoading(true, null);
@@ -181,9 +215,15 @@ public class PurchaseDialogFragment extends DialogFragment
                             public void onErrorResponse(VolleyError error) {
                                 Log.d(TAG, "error purchase");
 
-                                PurchaseDialogFragment.this.setLoading(false, null);
-                                mPinView.setError(getString(R.string.invalid_pincode));
-                                alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
+                                if (mNeedPin) {
+                                    PurchaseDialogFragment.this.setLoading(false, null);
+                                    mPinView.setError(getString(R.string.invalid_pincode));
+                                    alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
+                                } else {
+                                    PurchaseDialogFragment.this.setLoading(false,
+                                            getString(R.string.purchase_failed));
+                                }
+
                                 alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(true);
                             }
                         });
