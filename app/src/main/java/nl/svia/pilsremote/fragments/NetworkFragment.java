@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -21,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implementation of headless Fragment that runs an AsyncTask to fetch data from the network.
@@ -31,6 +33,7 @@ public class NetworkFragment extends Fragment {
     public static final String URL_GET_BALANCE = "http://dev.automatis.nl/pos/api/?action=get_user_balance&pin=%d&user=%d";
     public static final String URL_GET_BUY_PRODUCT = "http://dev.automatis.nl/pos/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=kelder_bier_app&forUser=0&method=list&pincode=%d&user=%d";
     public static final String TAG = "NetworkFragment";
+    public static final String REFERER_HEADER = "http://dev.automatis.nl/pos/saldo/";
 
     private RequestQueue mRequestQueue;
 
@@ -114,9 +117,18 @@ public class NetworkFragment extends Fragment {
                             responseListener.onResponse(Double.parseDouble(response));
                         }
                     }
+                }, errorListener) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Referer", REFERER_HEADER);
+                headers.putAll(super.getHeaders());
+                return headers;
+            }
+        };
 
-                }, errorListener);
 
+        stringRequest.setShouldCache(false);
         mRequestQueue.add(stringRequest);
 
     }
@@ -124,7 +136,15 @@ public class NetworkFragment extends Fragment {
     public void getProducts(Response.Listener<JSONObject> responseListener,
                             Response.ErrorListener errorListener) {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, URL_GET_PRODUCTS,
-                null, responseListener, errorListener);
+                null, responseListener, errorListener) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Referer", REFERER_HEADER);
+                headers.putAll(super.getHeaders());
+                return headers;
+            }
+        };
 
         mRequestQueue.add(jsonObjectRequest);
     }
@@ -132,9 +152,7 @@ public class NetworkFragment extends Fragment {
     public void buyProducts(int pin, int user, int productId, int amount,
                             final Response.Listener<Boolean> responseListener,
                             final Response.ErrorListener errorListener) {
-//        String url = String.format(URL_GET_BALANCE, pin, user);
-
-        // Cart syntax:
+        // Cart syntax: (JS(ON) style)
         // { "<ID>" : <amount> }
 
         HashMap<String, Integer> cart = new HashMap<>();
@@ -159,8 +177,17 @@ public class NetworkFragment extends Fragment {
                 Log.d(TAG, "Buy error: " + error.toString());
                 errorListener.onErrorResponse(error);
             }
-        });
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Referer", REFERER_HEADER);
+                headers.putAll(super.getHeaders());
+                return headers;
+            }
+        };
 
+        stringRequest.setShouldCache(false);
         mRequestQueue.add(stringRequest);
     }
 
