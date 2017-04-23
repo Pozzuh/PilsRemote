@@ -93,7 +93,15 @@ public class NetworkFragment extends Fragment {
                          Response.ErrorListener errorListener) {
         // Request a string response from the provided URL.
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, URL_GET_USERS,
-                null, responseListener, errorListener);
+                null, responseListener, errorListener) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Referer", REFERER_HEADER);
+                headers.putAll(super.getHeaders());
+                return headers;
+            }
+        };
 
         mRequestQueue.add(jsonArrayRequest);
 
