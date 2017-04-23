@@ -4,10 +4,10 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingBottom="@dimen/list_view_item_margin_bottom"
+    android:paddingBottom="@dimen/list_view_item_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/list_view_item_margin_top"
+    android:paddingTop="@dimen/list_view_item_margin"
     android:background="?android:attr/selectableItemBackground">
 
     <LinearLayout

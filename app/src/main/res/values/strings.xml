@@ -11,7 +11,7 @@
     <string name="login_submit_button">Login</string>
     <string name="invalid_pincode">Invalid pincode.</string>
 
-    <string name="product_header_balance">Current saldo: €%.2f</string>
+    <string name="product_header_balance">Current balance: €%.2f</string>
     <string name="product_price">€%.2f</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_settings">Settings</string>

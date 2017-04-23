@@ -52,6 +52,7 @@ public class ProductFragment extends Fragment implements Backable {
     private NetworkFragment mNetworkFragment;
 
     private ProgressBar mProgressBar;
+    private TextView mBalanceText;
     private RecyclerView mRecyclerView;
     private TextView mEmptyView;
     private SearchView mSearchView;
@@ -59,8 +60,6 @@ public class ProductFragment extends Fragment implements Backable {
     private ProductAdapter mProductAdapter;
 
     private List<ProductModel> mProductList;
-
-    private ProductAdapter.HeaderViewHolder mHeaderView;
 
     private int mUserId;
     private int mPin;
@@ -91,25 +90,30 @@ public class ProductFragment extends Fragment implements Backable {
     private void setLoading(boolean flag, @Nullable CharSequence error) {
         if (flag) {
             mProgressBar.setVisibility(View.VISIBLE);
+
+            mBalanceText.setVisibility(View.INVISIBLE);
             mRecyclerView.setVisibility(View.INVISIBLE);
             mEmptyView.setVisibility(View.INVISIBLE);
         } else {
             mProgressBar.setVisibility(View.INVISIBLE);
 
             if (error == null) {
+                mBalanceText.setVisibility(View.VISIBLE);
                 mRecyclerView.setVisibility(View.VISIBLE);
+
                 mEmptyView.setVisibility(View.INVISIBLE);
             } else {
-                mRecyclerView.setVisibility(View.INVISIBLE);
                 mEmptyView.setText(error);
                 mEmptyView.setVisibility(View.VISIBLE);
+
+                mBalanceText.setVisibility(View.INVISIBLE);
+                mRecyclerView.setVisibility(View.INVISIBLE);
             }
         }
     }
 
     private void updateBalanceText() {
-        // TODO balance text won't be updated if search is active
-        mHeaderView.getBalanceText().setText(getString(R.string.product_header_balance, mBalance));
+        mBalanceText.setText(getString(R.string.product_header_balance, mBalance));
         Log.d(TAG, "Set balance text");
     }
 
@@ -135,12 +139,6 @@ public class ProductFragment extends Fragment implements Backable {
     private void updateBalanceAndProducts() {
         setLoading(true, null);
 
-        if (mNetworkFragment == null) {
-            // This sometimes happens, but only during debugging (?)
-            Log.e(TAG, "mNetworkFragment was null!");
-            setLoading(false, getContext().getString(R.string.get_products_error));
-        }
-
         mNetworkFragment.getBalanceAndProducts(mPin, mUserId,
                 new Response.Listener<NetworkFragment.BalanceProductPair>() {
                     @Override
@@ -155,8 +153,9 @@ public class ProductFragment extends Fragment implements Backable {
                         }
 
                         mRecyclerView.scrollToPosition(0);
-
                         mBalance = response.balance;
+                        updateBalanceText();
+
                         setLoading(false, null);
                     }
                 }, new Response.ErrorListener() {
@@ -200,13 +199,8 @@ public class ProductFragment extends Fragment implements Backable {
                 });
 
             }
-        }, new ProductAdapter.HeaderViewHolderListener() {
-            @Override
-            public void onCreated(ProductAdapter.HeaderViewHolder headerViewHolder) {
-                mHeaderView = headerViewHolder;
-                updateBalanceText();
-            }
         });
+
         mProductAdapter.add(mProductList);
         mRecyclerView.setAdapter(mProductAdapter);
     }
@@ -237,7 +231,7 @@ public class ProductFragment extends Fragment implements Backable {
                 productList.add(new ProductModel(id, name, price));
 
             } catch (JSONException ignored) {
-                // Just don't add it to the lsit
+                // Just don't add it to the list
             }
         }
 
@@ -272,12 +266,14 @@ public class ProductFragment extends Fragment implements Backable {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_login, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_products, container, false);
 
         mProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
         mEmptyView = (TextView) rootView.findViewById(R.id.emptyText);
 
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.userList);
+        mBalanceText = (TextView) rootView.findViewById(R.id.balanceText);
+
+        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.productList);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -295,6 +291,11 @@ public class ProductFragment extends Fragment implements Backable {
     @Override
     public void onStart() {
         super.onStart();
+
+        // We already checked that our context is of type NetworkFragmentGetter in onAttach,
+        // so we can safely get the network fragment..
+        mNetworkFragment = ((NetworkFragmentGetter) getContext()).getNetworkFragment();
+
         Log.d(TAG, "Onstart product fragment");
         updateBalanceAndProducts();
     }
@@ -302,9 +303,8 @@ public class ProductFragment extends Fragment implements Backable {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof NetworkFragmentGetter) {
-            mNetworkFragment = ((NetworkFragmentGetter) context).getNetworkFragment();
-        } else {
+
+        if (!(context instanceof NetworkFragmentGetter)) {
             throw new RuntimeException(context.toString()
                     + " must implement NetworkFragmentGetter");
         }
@@ -347,6 +347,7 @@ public class ProductFragment extends Fragment implements Backable {
                 }
 
                 final List<ProductModel> filtered = filter(newText);
+
                 mProductAdapter.replaceAll(filtered);
                 mRecyclerView.scrollToPosition(0);
                 return true;

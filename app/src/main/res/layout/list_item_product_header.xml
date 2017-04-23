@@ -17,6 +17,7 @@
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Headline"
         android:textColor="@color/colorSecondaryText"
         android:text="@string/product_header_balance"
+        android:background="#FF8800"
         tools:text="Current saldo: €13.37"/>
 
     <!--<RelativeLayout-->

@@ -9,6 +9,7 @@ import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.Cache;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -36,12 +37,7 @@ public class NetworkFragment extends Fragment {
     public static final String REFERER_HEADER = "http://dev.automatis.nl/pos/saldo/";
 
     private RequestQueue mRequestQueue;
-
-    // Helper variables for getBalanceAndProducts
-    private Double mBalance = null;
-    private JSONObject mProducts = null;
-    private boolean mBalanceAndProductsErrorCalled = false;
-    private boolean mBalanceAndProductsSuccessCalled = false;
+    private Cache mCache;
 
     /**
      * Static initializer for NetworkFragment that sets the URL of the host it will be downloading
@@ -71,6 +67,7 @@ public class NetworkFragment extends Fragment {
         setRetainInstance(true);
 
         mRequestQueue = Volley.newRequestQueue(this.getContext());
+        mCache = mRequestQueue.getCache();
     }
 
     @Override
@@ -127,8 +124,10 @@ public class NetworkFragment extends Fragment {
             }
         };
 
-
+        // setShouldCache doesn't always work for some reason, so we clear the cache beforehand.
+        mCache.clear();
         stringRequest.setShouldCache(false);
+
         mRequestQueue.add(stringRequest);
 
     }

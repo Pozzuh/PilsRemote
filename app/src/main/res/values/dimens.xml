@@ -3,6 +3,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <dimen name="list_view_item_margin">8dp</dimen>
+
     <dimen name="list_view_item_margin_bottom">0dp</dimen>
     <dimen name="list_view_item_margin_top">16dp</dimen>
 
