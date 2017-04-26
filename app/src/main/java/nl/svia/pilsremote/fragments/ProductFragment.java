@@ -194,7 +194,11 @@ public class ProductFragment extends Fragment implements Backable {
                         toast.show();
 
                         ProductFragment.this.updateBalance();
+                    }
 
+                    @Override
+                    public double getBalance() {
+                        return mBalance;
                     }
                 });
 

@@ -25,6 +25,9 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
 import nl.svia.pilsremote.R;
+import nl.svia.pilsremote.data.DatabaseHelper;
+import nl.svia.pilsremote.data.PurchaseDbModel;
+import nl.svia.pilsremote.data.PurchaseEntry;
 import nl.svia.pilsremote.misc.NetworkFragmentGetter;
 import nl.svia.pilsremote.misc.ProductModel;
 import nl.svia.pilsremote.views.AmountPicker;
@@ -199,6 +202,8 @@ public class PurchaseDialogFragment extends DialogFragment
 
                 PurchaseDialogFragment.this.setLoading(true, null);
 
+                final double balanceBefore = mListener.getBalance();
+
                 Log.d(TAG, "On buying!");
                 mNetworkFragment.buyProducts(pin, mUserId, mProduct.getId(),
                         mAmountView.getValue(), new Response.Listener<Boolean>() {
@@ -207,6 +212,20 @@ public class PurchaseDialogFragment extends DialogFragment
                                 if (mListener != null) {
                                     mListener.onPurchase(mProduct, mAmountView.getValue());
                                 }
+
+                                DatabaseHelper dbHelper =
+                                        DatabaseHelper.getInstance(
+                                                getContext().getApplicationContext());
+
+                                PurchaseDbModel purchase = new PurchaseDbModel(
+                                        mUserId,
+                                        mProduct.getId(),
+                                        mAmountView.getValue(),
+                                        mProduct.getPrice(),
+                                        balanceBefore
+                                );
+
+                                dbHelper.addPurchase(purchase);
 
                                 PurchaseDialogFragment.this.getDialog().dismiss();
                             }
@@ -259,5 +278,7 @@ public class PurchaseDialogFragment extends DialogFragment
 
     public interface OnPurchaseListener {
         void onPurchase(ProductModel product, int amount);
+
+        double getBalance();
     }
 }
