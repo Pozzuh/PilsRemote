@@ -23,5 +23,7 @@
     <string name="purchase_price_hint">Price: €%.2f</string>
     <string name="purchase_failed">Unable to purchase product.</string>
     <string name="purchase_success">Successfully purchased %1$d %2$s!</string>
+    <string name="action_history">History</string>
+    <string name="action_products">Products</string>
 
 </resources>

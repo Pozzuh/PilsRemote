@@ -2,9 +2,15 @@ package nl.svia.pilsremote.data;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import java.util.ArrayList;
+
+import nl.svia.pilsremote.adapters.PurchaseAdapter;
+import nl.svia.pilsremote.misc.PurchaseModel;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "pilsremote.db";
@@ -75,5 +81,64 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
+    }
+
+    public ArrayList<PurchaseModel> getPurchases(int userId) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        // Define a projection that specifies which columns from the database
+        // you will actually use after this query.
+        String[] projection = {
+                PurchaseEntry._ID,
+                PurchaseEntry.COLUMN_PRODUCT,
+                PurchaseEntry.COLUMN_AMOUNT,
+                PurchaseEntry.COLUMN_PRICE,
+                PurchaseEntry.COLUMN_OLD_BALANCE,
+                PurchaseEntry.COLUMN_TIMESTAMP
+        };
+
+        // Filter results WHERE "title" = 'My Title'
+        String selection = PurchaseEntry.COLUMN_USER + " = ?";
+        String[] selectionArgs = {Integer.toString(userId)};
+
+        // How you want the results sorted in the resulting Cursor
+        String sortOrder =
+                PurchaseEntry.COLUMN_TIMESTAMP + " DESC";
+
+        Cursor c = db.query(
+                PurchaseEntry.TABLE_NAME,                     // The table to query
+                projection,                               // The columns to return
+                selection,                                // The columns for the WHERE clause
+                selectionArgs,                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                sortOrder                                 // The sort order
+        );
+
+
+        int idxId = c.getColumnIndex(PurchaseEntry._ID);
+        int idxProduct = c.getColumnIndex(PurchaseEntry.COLUMN_PRODUCT);
+        int idxAmount = c.getColumnIndex(PurchaseEntry.COLUMN_AMOUNT);
+        int idxPrice = c.getColumnIndex(PurchaseEntry.COLUMN_PRICE);
+        int idxOldBalance = c.getColumnIndex(PurchaseEntry.COLUMN_OLD_BALANCE);
+        int idxTimestamp = c.getColumnIndex(PurchaseEntry.COLUMN_TIMESTAMP);
+
+        ArrayList<PurchaseModel> list = new ArrayList<>();
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            PurchaseModel model = new PurchaseModel(c.getInt(idxId),
+                    c.getInt(idxProduct),
+                    c.getInt(idxAmount),
+                    c.getInt(idxPrice),
+                    c.getInt(idxOldBalance),
+                    c.getLong(idxTimestamp));
+
+            list.add(model);
+
+            Log.d(TAG, "Added: " + model.getProductId());
+        }
+
+        c.close();
+
+        return list;
     }
 }

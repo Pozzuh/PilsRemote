@@ -11,6 +11,7 @@ import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 
+import nl.svia.pilsremote.fragments.HistoryFragment;
 import nl.svia.pilsremote.fragments.SettingsFragment;
 import nl.svia.pilsremote.misc.Backable;
 import nl.svia.pilsremote.fragments.LoginFragment;
@@ -100,6 +101,18 @@ public class MainActivity extends AppCompatActivity implements NetworkFragmentGe
             case R.id.action_settings:
                 mFragmentManager.beginTransaction()
                         .replace(R.id.fragment_container, SettingsFragment.newInstance())
+                        .addToBackStack(null)
+                        .commit();
+                return true;
+            case R.id.action_history:
+                mFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, HistoryFragment.newInstance(mUserId))
+                        .addToBackStack(null)
+                        .commit();
+                return true;
+            case R.id.action_products:
+                mFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, ProductFragment.newInstance(mUserId, mPin))
                         .addToBackStack(null)
                         .commit();
                 return true;

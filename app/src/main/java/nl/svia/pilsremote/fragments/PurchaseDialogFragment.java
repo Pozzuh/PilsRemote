@@ -173,6 +173,7 @@ public class PurchaseDialogFragment extends DialogFragment
         return alertDialog;
     }
 
+
     @Override
     public void onShow(DialogInterface dialogInterface) {
         Log.d(TAG, "on show");
@@ -181,73 +182,82 @@ public class PurchaseDialogFragment extends DialogFragment
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "On click!");
-                final AlertDialog alertDialog =
-                        (AlertDialog) PurchaseDialogFragment.this.getDialog();
-                alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(false);
-                alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(false);
-
-                int pin;
-                if (mNeedPin) {
-                    try {
-                        pin = Integer.parseInt(mPinView.getText().toString());
-                    } catch (Exception ignored) {
-                        mPinView.setError(getString(R.string.invalid_pincode));
-                        alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
-                        alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(true);
-                        return;
-                    }
-                } else {
-                    pin = mPin;
-                }
-
-                PurchaseDialogFragment.this.setLoading(true, null);
-
-                final double balanceBefore = mListener.getBalance();
-
-                Log.d(TAG, "On buying!");
-                mNetworkFragment.buyProducts(pin, mUserId, mProduct.getId(),
-                        mAmountView.getValue(), new Response.Listener<Boolean>() {
-                            @Override
-                            public void onResponse(Boolean response) {
-                                if (mListener != null) {
-                                    mListener.onPurchase(mProduct, mAmountView.getValue());
-                                }
-
-                                DatabaseHelper dbHelper =
-                                        DatabaseHelper.getInstance(
-                                                getContext().getApplicationContext());
-
-                                PurchaseDbModel purchase = new PurchaseDbModel(
-                                        mUserId,
-                                        mProduct.getId(),
-                                        mAmountView.getValue(),
-                                        mProduct.getPrice(),
-                                        balanceBefore
-                                );
-
-                                dbHelper.addPurchase(purchase);
-
-                                PurchaseDialogFragment.this.getDialog().dismiss();
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d(TAG, "error purchase");
-
-                                if (mNeedPin) {
-                                    PurchaseDialogFragment.this.setLoading(false, null);
-                                    mPinView.setError(getString(R.string.invalid_pincode));
-                                    alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
-                                } else {
-                                    PurchaseDialogFragment.this.setLoading(false,
-                                            getString(R.string.purchase_failed));
-                                }
-
-                                alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(true);
-                            }
-                        });
+                doPurchase();
             }
         });
+    }
+
+    public void doPurchase() {
+        final AlertDialog alertDialog =
+                (AlertDialog) PurchaseDialogFragment.this.getDialog();
+        alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(false);
+        alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(false);
+
+        int pin;
+        if (mNeedPin || mPin == -1) {
+            mPincodePicker.setVisibility(View.VISIBLE);
+
+            try {
+                pin = Integer.parseInt(mPinView.getText().toString());
+            } catch (Exception ignored) {
+                mPinView.setError(getString(R.string.invalid_pincode));
+                alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
+                alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(true);
+                return;
+            }
+        } else {
+            mPincodePicker.setVisibility(View.GONE);
+
+            pin = mPin;
+        }
+
+        setLoading(true, null);
+
+        final double balanceBefore = mListener.getBalance();
+
+        Log.d(TAG, "On buying!");
+        mNetworkFragment.buyProducts(pin, mUserId, mProduct.getId(),
+                mAmountView.getValue(), new Response.Listener<Boolean>() {
+                    @Override
+                    public void onResponse(Boolean response) {
+                        if (mListener != null) {
+                            mListener.onPurchase(mProduct, mAmountView.getValue());
+                        }
+
+                        DatabaseHelper dbHelper = DatabaseHelper.getInstance(getContext());
+
+                        PurchaseDbModel purchase = new PurchaseDbModel(
+                                mUserId,
+                                mProduct.getId(),
+                                mAmountView.getValue(),
+                                mProduct.getPrice(),
+                                balanceBefore
+                        );
+
+                        dbHelper.addPurchase(purchase);
+
+                        PurchaseDialogFragment.this.getDialog().dismiss();
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, "error purchase");
+
+                        if (mNeedPin) {
+                            PurchaseDialogFragment.this.setLoading(false, null);
+
+                            // The server doesn't return any useful error codes, so we just
+                            // assume the user's pin is wrong.
+                            mPinView.setError(getString(R.string.invalid_pincode));
+                            alertDialog.getButton(Dialog.BUTTON_POSITIVE).setEnabled(true);
+                        } else {
+                            PurchaseDialogFragment.this.setLoading(false,
+                                    getString(R.string.purchase_failed));
+                        }
+
+                        alertDialog.getButton(Dialog.BUTTON_NEGATIVE).setEnabled(true);
+                    }
+                });
     }
 
     public void SetOnPurchaseListener(OnPurchaseListener listener) {

@@ -28,10 +28,12 @@ import java.util.Map;
  * Implementation of headless Fragment that runs an AsyncTask to fetch data from the network.
  */
 public class NetworkFragment extends Fragment {
+    public static final String API_KEY = "kelder_bier_app";
+
     public static final String URL_GET_USERS = "http://dev.automatis.nl/pos/api/?action=get_users&asArray";
     public static final String URL_GET_PRODUCTS = "http://dev.automatis.nl/pos/api/?action=get_products";
     public static final String URL_GET_BALANCE = "http://dev.automatis.nl/pos/api/?action=get_user_balance&pin=%d&user=%d";
-    public static final String URL_GET_BUY_PRODUCT = "http://dev.automatis.nl/pos/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=kelder_bier_app&forUser=0&method=list&pincode=%d&user=%d";
+    public static final String URL_GET_BUY_PRODUCT = "http://dev.automatis.nl/pos/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=%s&forUser=0&method=list&pincode=%d&user=%d";
     public static final String TAG = "NetworkFragment";
     public static final String REFERER_HEADER = "http://dev.automatis.nl/pos/saldo/";
 
@@ -77,7 +79,6 @@ public class NetworkFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        // Clear reference to host Activity to avoid memory leak.
     }
 
     @Override
@@ -132,7 +133,7 @@ public class NetworkFragment extends Fragment {
         };
 
         // setShouldCache doesn't always work for some reason, so we clear the cache beforehand.
-        mCache.clear();
+//        mCache.clear();
         stringRequest.setShouldCache(false);
 
         mRequestQueue.add(stringRequest);
@@ -165,7 +166,7 @@ public class NetworkFragment extends Fragment {
         cart.put(String.valueOf(productId), amount);
         JSONObject obj = new JSONObject(cart);
 
-        String url = String.format(URL_GET_BUY_PRODUCT, obj.toString(), pin, user);
+        String url = String.format(URL_GET_BUY_PRODUCT, obj.toString(), API_KEY, pin, user);
 
         Log.d(TAG, "cart:" + obj.toString());
 
@@ -216,10 +217,10 @@ public class NetworkFragment extends Fragment {
     }
 
     static class BalanceProductPair {
-        public double balance;
-        public JSONObject products;
+        double balance;
+        JSONObject products;
 
-        public BalanceProductPair(double b, JSONObject p) {
+        BalanceProductPair(double b, JSONObject p) {
             balance = b;
             products = p;
         }
