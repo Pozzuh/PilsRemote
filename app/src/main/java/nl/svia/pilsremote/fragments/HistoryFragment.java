@@ -14,6 +14,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,6 +33,7 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,6 +57,7 @@ public class HistoryFragment extends Fragment implements Backable {
 
     private NetworkFragment mNetworkFragment;
 
+    private ProgressBar mProgressBar;
     private RecyclerView mRecyclerView;
     private SearchView mSearchView;
 
@@ -84,14 +87,63 @@ public class HistoryFragment extends Fragment implements Backable {
         return fragment;
     }
 
+    private void setLoading(boolean flag) {
+        if (flag) {
+            mProgressBar.setVisibility(View.VISIBLE);
+            mRecyclerView.setVisibility(View.INVISIBLE);
+        } else {
+            mProgressBar.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private SparseArray<String> parseProducts(final JSONObject products) {
+        SparseArray<String> productList = new SparseArray<>();
+        Iterator<String> iter = products.keys();
+
+        while (iter.hasNext()) {
+            String key = iter.next();
+            try {
+                JSONObject obj = products.getJSONObject(key);
+
+                String name = obj.getString("name");
+                int id = obj.getInt("id");
+
+                productList.put(id, name);
+
+            } catch (JSONException ignored) {
+                // Just don't add it to the list
+            }
+        }
+
+        return productList;
+    }
+
     private void createAdapter() {
         DatabaseHelper helper = DatabaseHelper.getInstance(getActivity());
         mPurchaseList = helper.getPurchases(mUserId);
 
-        mPurchaseAdapter = new PurchaseAdapter(getContext());
-        mPurchaseAdapter.add(mPurchaseList);
+        mNetworkFragment.getProducts(new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                SparseArray<String> products = parseProducts(response);
 
-        mRecyclerView.setAdapter(mPurchaseAdapter);
+                mPurchaseAdapter = new PurchaseAdapter(getContext(), products);
+                mPurchaseAdapter.add(mPurchaseList);
+
+                mRecyclerView.setAdapter(mPurchaseAdapter);
+                setLoading(false);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // We didn't get a proper response, so we just show the product ids instead
+                mPurchaseAdapter = new PurchaseAdapter(getContext());
+                mPurchaseAdapter.add(mPurchaseList);
+
+                mRecyclerView.setAdapter(mPurchaseAdapter);
+                setLoading(false);
+            }
+        });
     }
 
     @Override
@@ -123,6 +175,7 @@ public class HistoryFragment extends Fragment implements Backable {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_history, container, false);
 
+        mProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.productList);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -218,22 +271,24 @@ public class HistoryFragment extends Fragment implements Backable {
     }
 
     private List<PurchaseModel> filter(String query) {
-        if (mPurchaseList == null) {
-            return new ArrayList<>();
+        SparseArray<String> productMap = mPurchaseAdapter.getProductMap();
+
+        if (productMap == null) {
+            return mPurchaseList;
         }
 
-        return mPurchaseList;
+        final String lowerCaseQuery = query.toLowerCase();
 
-//        final String lowerCaseQuery = query.toLowerCase();
+        final List<PurchaseModel> filteredModelList = new ArrayList<>();
+        for (PurchaseModel product : mPurchaseList) {
+            final int id = product.getProductId();
+            final String name = productMap.get(id).toLowerCase();
 
-//        final List<PurchaseModel> filteredModelList = new ArrayList<>();
-//        for (PurchaseModel product : mPurchaseList) {
-//            final String text = product.getName().toLowerCase();
-//            if (text.contains(lowerCaseQuery)) {
-//                filteredModelList.add(product);
-//            }
-//        }
-//        return filteredModelList;
+            if (name.contains(lowerCaseQuery)) {
+                filteredModelList.add(product);
+            }
+        }
+        return filteredModelList;
     }
 
     @Override

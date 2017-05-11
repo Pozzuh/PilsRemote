@@ -22,6 +22,8 @@ import nl.svia.pilsremote.misc.NetworkFragmentGetter;
 public class MainActivity extends AppCompatActivity implements NetworkFragmentGetter,
         LoginFragment.OnLoggedInListener, SettingsFragment.SettingsFragmentListener {
     public static final String TAG = "MainActivity";
+    private static final String BUNDLE_USER_ID = "BUNDLE_USER_ID";
+    private static final String BUNDLE_PIN = "BUNDLE_PIN";
 
     private FragmentManager mFragmentManager;
 
@@ -119,6 +121,22 @@ public class MainActivity extends AppCompatActivity implements NetworkFragmentGe
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        mUserId = savedInstanceState.getInt(BUNDLE_USER_ID, -1);
+        mPin = savedInstanceState.getInt(BUNDLE_PIN, -1);
+
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(BUNDLE_USER_ID, mUserId);
+        outState.putInt(BUNDLE_PIN, mPin);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override

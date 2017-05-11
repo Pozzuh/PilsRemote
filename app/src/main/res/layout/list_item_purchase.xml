@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -10,47 +11,73 @@
     android:paddingTop="@dimen/list_view_item_margin"
     android:background="?android:attr/selectableItemBackground">
 
-    <ImageView
-        android:id="@+id/amount"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin" />
+
 
     <LinearLayout
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_toEndOf="@id/amount">
+        android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/name"
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="@dimen/list_circle_size"
+            android:layout_height="@dimen/list_circle_size"
+            android:layout_gravity="center"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin" />
+
+        <LinearLayout
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Headline"
+                android:textColor="@color/colorPrimaryText"
+                tools:text="Pilsner" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
+                    android:textColor="@color/colorPrimaryText"
+                    tools:text="€0.30" />
+
+                <TextView
+                    android:id="@+id/date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/list_view_item_margin"
+                    android:gravity="end"
+                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
+                    android:textColor="@color/colorSecondaryText"
+                    tools:text="10 minutes ago" />
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/amount"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/list_view_item_margin"
+            android:gravity="center_vertical|end"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Headline"
             android:textColor="@color/colorPrimaryText"
-            tools:text="Pilsner" />
-
-        <TextView
-            android:id="@+id/price"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
-            android:textColor="@color/colorPrimaryText"
-            tools:text="€0.30" />
+            tools:text="3x" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/date"
-        android:layout_margin="@dimen/list_view_item_margin"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_toEndOf="@id/title"
-        android:gravity="end|center_vertical"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Headline"
-        android:textColor="@color/colorSecondaryText"
-        tools:text="10 minutes ago" />
 
 </RelativeLayout>

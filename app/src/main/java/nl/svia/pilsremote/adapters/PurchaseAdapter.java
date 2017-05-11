@@ -1,9 +1,12 @@
 package nl.svia.pilsremote.adapters;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +16,7 @@ import android.widget.TextView;
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -24,6 +28,7 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private static final String TAG = "PurchaseAdapter";
 
     private Context mContext;
+    private SparseArray<String> mProductMap;
 
     private ColorGenerator mColorGenerator = ColorGenerator.MATERIAL;
 
@@ -38,9 +43,9 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             if (timeA == timeB) {
                 return 0;
             } else if (timeA > timeB) {
-                return 1;
-            } else {
                 return -1;
+            } else {
+                return 1;
             }
         }
     };
@@ -84,7 +89,12 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             });
 
     public PurchaseAdapter(Context context) {
+        this(context, null);
+    }
+
+    public PurchaseAdapter(Context context, @Nullable SparseArray<String> productMap) {
         this.mContext = context;
+        this.mProductMap = productMap;
 
         Log.d(TAG, "Product adapter created");
     }
@@ -140,6 +150,9 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         mList.endBatchedUpdates();
     }
 
+    public SparseArray<String> getProductMap() {
+        return mProductMap;
+    }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -161,14 +174,21 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             PurchaseModel obj = getItem(i);
 
-            TextDrawable drawable = TextDrawable.builder()
-                    .buildRound(String.valueOf(obj.getAmount()),
-                            mColorGenerator.getColor(obj.getTimestamp()));
+            String nameText = mProductMap == null ? String.valueOf(obj.getProductId()) :
+                    mProductMap.get(obj.getProductId());
 
-            purchaseViewHolder.amountView.setImageDrawable(drawable);
-            purchaseViewHolder.nameView.setText(String.valueOf(obj.getProductId()));
+            TextDrawable drawable = TextDrawable.builder()
+                    .buildRound(String.valueOf(nameText.charAt(0)),
+                            mColorGenerator.getColor(nameText));
+
+            CharSequence timeText = DateUtils.getRelativeTimeSpanString(obj.getTimestamp(),
+                    System.currentTimeMillis(), 0);
+
+            purchaseViewHolder.nameView.setText(nameText);
+            purchaseViewHolder.imageView.setImageDrawable(drawable);
             purchaseViewHolder.priceView.setText(mContext.getString(R.string.product_price, obj.getPrice()));
-            purchaseViewHolder.dateView.setText(String.valueOf(obj.getTimestamp()));
+            purchaseViewHolder.dateView.setText(timeText);
+            purchaseViewHolder.amountView.setText(obj.getAmount() + "x");
         }
     }
 
@@ -178,18 +198,21 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     class PurchaseViewHolder extends RecyclerView.ViewHolder {
-        ImageView amountView;
+        ImageView imageView;
         TextView nameView;
         TextView priceView;
         TextView dateView;
+        TextView amountView;
 
         public PurchaseViewHolder(View itemView) {
             super(itemView);
 
-            amountView = (ImageView) itemView.findViewById(R.id.amount);
+            imageView = (ImageView) itemView.findViewById(R.id.image);
             nameView = (TextView) itemView.findViewById(R.id.name);
             priceView = (TextView) itemView.findViewById(R.id.price);
             dateView = (TextView) itemView.findViewById(R.id.date);
+            amountView = (TextView) itemView.findViewById(R.id.amount);
+
         }
     }
 }
