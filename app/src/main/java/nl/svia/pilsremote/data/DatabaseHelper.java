@@ -94,7 +94,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "ORDER BY _id " +
                 "DESC LIMIT 1", selectionArgs);
 
-        int balance = -1;
+        int balance = 0;
 
         if (c.moveToFirst()) {
             balance = c.getInt(0);
