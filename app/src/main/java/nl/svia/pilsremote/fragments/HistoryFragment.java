@@ -115,19 +115,32 @@ public class HistoryFragment extends Fragment implements Backable {
             }
         }
 
+        // The app introduces a few 'fake' products. Add those.
+        productList.put(ProductFragment.PRODUCT_DEPOSIT_ID, getString(R.string.product_deposit));
+        productList.put(ProductFragment.PRODUCT_UNKNOWN_ID, getString(R.string.product_unknown));
+
         return productList;
     }
 
     private void createAdapter() {
-        DatabaseHelper helper = DatabaseHelper.getInstance(getActivity());
+        final DatabaseHelper helper = DatabaseHelper.getInstance(getActivity());
         mPurchaseList = helper.getPurchases(mUserId);
+
+        final PurchaseAdapter.PurchaseViewHolderListener listener =
+                new PurchaseAdapter.PurchaseViewHolderListener() {
+                    @Override
+                    public void onItemClick(View view, int index) {
+                        Log.d(TAG, "Clicked: " + mPurchaseList.get(index).getId());
+//                helper.deletePurchase(mPurchaseList.get(index).getId());
+                    }
+                };
 
         mNetworkFragment.getProducts(new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 SparseArray<String> products = parseProducts(response);
 
-                mPurchaseAdapter = new PurchaseAdapter(getContext(), products);
+                mPurchaseAdapter = new PurchaseAdapter(getContext(), products, listener);
                 mPurchaseAdapter.add(mPurchaseList);
 
                 mRecyclerView.setAdapter(mPurchaseAdapter);
@@ -137,7 +150,7 @@ public class HistoryFragment extends Fragment implements Backable {
             @Override
             public void onErrorResponse(VolleyError error) {
                 // We didn't get a proper response, so we just show the product ids instead
-                mPurchaseAdapter = new PurchaseAdapter(getContext());
+                mPurchaseAdapter = new PurchaseAdapter(getContext(), listener);
                 mPurchaseAdapter.add(mPurchaseList);
 
                 mRecyclerView.setAdapter(mPurchaseAdapter);

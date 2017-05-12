@@ -32,6 +32,8 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     private ColorGenerator mColorGenerator = ColorGenerator.MATERIAL;
 
+    private PurchaseViewHolderListener mPurchaseViewHolderListener;
+
     private final static int TYPE_PURCHASE = 0;
 
     private Comparator<PurchaseModel> mComparator = new Comparator<PurchaseModel>() {
@@ -88,13 +90,15 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 }
             });
 
-    public PurchaseAdapter(Context context) {
-        this(context, null);
+    public PurchaseAdapter(Context context, PurchaseViewHolderListener listener) {
+        this(context, null, listener);
     }
 
-    public PurchaseAdapter(Context context, @Nullable SparseArray<String> productMap) {
+    public PurchaseAdapter(Context context, @Nullable SparseArray<String> productMap,
+                           PurchaseViewHolderListener listener) {
         this.mContext = context;
         this.mProductMap = productMap;
+        this.mPurchaseViewHolderListener = listener;
 
         Log.d(TAG, "Product adapter created");
     }
@@ -161,7 +165,7 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         if (viewType == TYPE_PURCHASE) {
             v = LayoutInflater.from(c).inflate(R.layout.list_item_purchase, viewGroup, false);
-            return new PurchaseViewHolder(v);
+            return new PurchaseViewHolder(v, mPurchaseViewHolderListener);
         }
 
         return null;
@@ -186,7 +190,7 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             purchaseViewHolder.nameView.setText(nameText);
             purchaseViewHolder.imageView.setImageDrawable(drawable);
-            purchaseViewHolder.priceView.setText(mContext.getString(R.string.product_price, obj.getPrice()));
+            purchaseViewHolder.priceView.setText(mContext.getString(R.string.product_price, Math.abs(obj.getPrice())));
             purchaseViewHolder.dateView.setText(timeText);
             purchaseViewHolder.amountView.setText(obj.getAmount() + "x");
         }
@@ -197,14 +201,16 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return mList.size();
     }
 
-    class PurchaseViewHolder extends RecyclerView.ViewHolder {
+    class PurchaseViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView imageView;
         TextView nameView;
         TextView priceView;
         TextView dateView;
         TextView amountView;
 
-        public PurchaseViewHolder(View itemView) {
+        private PurchaseViewHolderListener mListener;
+
+        public PurchaseViewHolder(View itemView, PurchaseViewHolderListener listener) {
             super(itemView);
 
             imageView = (ImageView) itemView.findViewById(R.id.image);
@@ -213,6 +219,18 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             dateView = (TextView) itemView.findViewById(R.id.date);
             amountView = (TextView) itemView.findViewById(R.id.amount);
 
+            mListener = listener;
+
+            itemView.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View view) {
+            mListener.onItemClick(view, this.getAdapterPosition());
+        }
+    }
+
+    public interface PurchaseViewHolderListener {
+        void onItemClick(View view, int index);
     }
 }

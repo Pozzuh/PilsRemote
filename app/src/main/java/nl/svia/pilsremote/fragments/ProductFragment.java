@@ -35,6 +35,8 @@ import java.util.List;
 
 import nl.svia.pilsremote.R;
 import nl.svia.pilsremote.adapters.ProductAdapter;
+import nl.svia.pilsremote.data.DatabaseHelper;
+import nl.svia.pilsremote.data.PurchaseDbModel;
 import nl.svia.pilsremote.misc.Backable;
 import nl.svia.pilsremote.misc.NetworkFragmentGetter;
 import nl.svia.pilsremote.misc.ProductModel;
@@ -48,6 +50,9 @@ public class ProductFragment extends Fragment implements Backable {
     private static final String TAG = "ProductFragment";
     private static final String ARGUMENT_USER_ID = "ARG_USER_ID";
     private static final String ARGUMENT_PIN = "ARG_PIN";
+
+    public static final int PRODUCT_UNKNOWN_ID = 27000;
+    public static final int PRODUCT_DEPOSIT_ID = 27001;
 
     private NetworkFragment mNetworkFragment;
 
@@ -155,6 +160,21 @@ public class ProductFragment extends Fragment implements Backable {
                         mRecyclerView.scrollToPosition(0);
                         mBalance = response.balance;
                         updateBalanceText();
+
+                        DatabaseHelper db = DatabaseHelper.getInstance(getActivity());
+                        int lastBalance = db.getLastBalance(mUserId);
+                        int currBalance = (int) (mBalance * 100);
+
+                        if (lastBalance != currBalance) {
+                            int id = currBalance > lastBalance ? PRODUCT_DEPOSIT_ID :
+                                    PRODUCT_UNKNOWN_ID;
+                            double price = (currBalance - lastBalance) / 100.0;
+                            double oldBalance = mBalance - price;
+
+                            PurchaseDbModel model = new PurchaseDbModel(mUserId, id, 1, price * -1, oldBalance);
+
+                            db.addPurchase(model);
+                        }
 
                         setLoading(false, null);
                     }

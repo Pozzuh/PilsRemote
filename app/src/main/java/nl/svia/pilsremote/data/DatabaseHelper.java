@@ -83,6 +83,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    public int getLastBalance(int userId) {
+        SQLiteDatabase db = getReadableDatabase();
+
+        String[] selectionArgs = {Integer.toString(userId)};
+
+        Cursor c = db.rawQuery("SELECT balance_before - (price * amount) AS last_balance, user_id " +
+                "FROM Purchase " +
+                "WHERE user_id= ?  " +
+                "ORDER BY _id " +
+                "DESC LIMIT 1", selectionArgs);
+
+        int balance = -1;
+
+        if (c.moveToFirst()) {
+            balance = c.getInt(0);
+        }
+
+        c.close();
+
+        return balance;
+    }
+
+    public void deletePurchase(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        String[] selectionArgs = {Integer.toString(id)};
+        db.delete(PurchaseEntry.TABLE_NAME, PurchaseEntry._ID + " = ?", selectionArgs);
+    }
+
     public ArrayList<PurchaseModel> getPurchases(int userId) {
         SQLiteDatabase db = getReadableDatabase();
 
