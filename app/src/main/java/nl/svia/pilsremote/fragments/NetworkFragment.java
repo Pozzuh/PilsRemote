@@ -30,12 +30,12 @@ import java.util.Map;
 public class NetworkFragment extends Fragment {
     public static final String API_KEY = "kelder_bier_app";
 
-    public static final String URL_GET_USERS = "http://dev.automatis.nl/pos/api/?action=get_users&asArray";
-    public static final String URL_GET_PRODUCTS = "http://dev.automatis.nl/pos/api/?action=get_products";
-    public static final String URL_GET_BALANCE = "http://dev.automatis.nl/pos/api/?action=get_user_balance&pin=%d&user=%d";
-    public static final String URL_GET_BUY_PRODUCT = "http://dev.automatis.nl/pos/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=%s&forUser=0&method=list&pincode=%d&user=%d";
+    public static final String URL_GET_USERS = "https://dev.automatis.nl/pos/api/?action=get_users&asArray";
+    public static final String URL_GET_PRODUCTS = "https://dev.automatis.nl/pos/api/?action=get_products";
+    public static final String URL_GET_BALANCE = "https://dev.automatis.nl/pos/api/?action=get_user_balance&pin=%d&user=%d";
+    public static final String URL_GET_BUY_PRODUCT = "https://dev.automatis.nl/pos/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=%s&forUser=0&method=list&pincode=%d&user=%d";
     public static final String TAG = "NetworkFragment";
-    public static final String REFERER_HEADER = "http://dev.automatis.nl/pos/saldo/";
+    public static final String REFERER_HEADER = "https://dev.automatis.nl/pos/saldo/";
 
     private RequestQueue mRequestQueue;
     private Cache mCache;

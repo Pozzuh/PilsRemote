@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import nl.svia.pilsremote.R;
+import nl.svia.pilsremote.fragments.ProductFragment;
 import nl.svia.pilsremote.misc.ProductModel;
 import nl.svia.pilsremote.misc.PurchaseModel;
 
@@ -192,7 +193,13 @@ public class PurchaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             purchaseViewHolder.imageView.setImageDrawable(drawable);
             purchaseViewHolder.priceView.setText(mContext.getString(R.string.product_price, Math.abs(obj.getPrice())));
             purchaseViewHolder.dateView.setText(timeText);
-            purchaseViewHolder.amountView.setText(obj.getAmount() + "x");
+
+            if (obj.getProductId() == ProductFragment.PRODUCT_DEPOSIT_ID ||
+                    obj.getProductId() == ProductFragment.PRODUCT_UNKNOWN_ID) {
+                purchaseViewHolder.amountView.setText("");
+            } else {
+                purchaseViewHolder.amountView.setText(obj.getAmount() + "x");
+            }
         }
     }
 
