@@ -16,4 +16,9 @@
     <string name="ask_pin_summary">Ask for your pin code every time you buy a product.</string>
     <bool name="ask_pin_default">true</bool>
 
+    <string name="key_check_ssl">PREF_CHECK_SSL</string>
+    <string name="check_ssl_title">Check SSL certificates</string>
+    <string name="check_ssl_summary">Check SSL certificates for validity.</string>
+    <bool name="check_ssl_default">true</bool>
+
 </resources>

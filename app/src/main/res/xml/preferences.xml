@@ -12,6 +12,11 @@
             android:title="@string/beer_only_title"
             android:summary="@string/beer_only_summary"
             android:defaultValue="@bool/beer_only_default"/>
+        <CheckBoxPreference
+            android:key="@string/key_check_ssl"
+            android:title="@string/check_ssl_title"
+            android:summary="@string/check_ssl_summary"
+            android:defaultValue="@bool/check_ssl_default" />
     </PreferenceCategory>
 
     <PreferenceCategory

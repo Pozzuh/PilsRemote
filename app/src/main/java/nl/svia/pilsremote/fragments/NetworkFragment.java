@@ -1,10 +1,12 @@
 package nl.svia.pilsremote.fragments;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -18,11 +20,24 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import nl.svia.pilsremote.R;
 
 /**
  * Implementation of headless Fragment that runs an AsyncTask to fetch data from the network.
@@ -39,6 +54,54 @@ public class NetworkFragment extends Fragment {
 
     private RequestQueue mRequestQueue;
     private Cache mCache;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        boolean checkSSL = sharedPrefs.getBoolean(
+                getActivity().getString(R.string.key_check_ssl),
+                getContext().getResources().getBoolean(R.bool.check_ssl_default));
+
+        if (checkSSL) {
+            return;
+        }
+
+        // Code from https://stackoverflow.com/a/34991596
+        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        }};
+        SSLContext sc = null;
+        try {
+            sc = SSLContext.getInstance("SSL");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        try {
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        // Create all-trusting host name verifier
+        HostnameVerifier allHostsValid = new HostnameVerifier() {
+            public boolean verify(String hostname, SSLSession session) {
+                return true;
+            }
+        };
+        // Install the all-trusting host verifier
+        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+    }
 
     /**
      * Static initializer for NetworkFragment that sets the URL of the host it will be downloading
@@ -69,11 +132,6 @@ public class NetworkFragment extends Fragment {
 
         mRequestQueue = Volley.newRequestQueue(this.getContext());
         mCache = mRequestQueue.getCache();
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
     }
 
     @Override
