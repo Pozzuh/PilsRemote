@@ -19,6 +19,6 @@
     <string name="key_check_ssl">PREF_CHECK_SSL</string>
     <string name="check_ssl_title">Check SSL certificates</string>
     <string name="check_ssl_summary">Check SSL certificates for validity.</string>
-    <bool name="check_ssl_default">true</bool>
+    <bool name="check_ssl_default">false</bool>
 
 </resources>
