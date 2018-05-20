@@ -45,12 +45,12 @@ import nl.svia.pilsremote.R;
 public class NetworkFragment extends Fragment {
     public static final String API_KEY = "kelder_bier_app";
 
-    public static final String URL_GET_USERS = "https://dev.automatis.nl/pos/api/?action=get_users&asArray";
-    public static final String URL_GET_PRODUCTS = "https://dev.automatis.nl/pos/api/?action=get_products";
-    public static final String URL_GET_BALANCE = "https://dev.automatis.nl/pos/api/?action=get_user_balance&pin=%d&user=%d";
-    public static final String URL_GET_BUY_PRODUCT = "https://dev.automatis.nl/pos/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=%s&forUser=0&method=list&pincode=%d&user=%d";
+    public static final String URL_GET_USERS = "https://pos.svia.nl/api/?action=get_users&asArray";
+    public static final String URL_GET_PRODUCTS = "https://pos.svia.nl/api/?action=get_products";
+    public static final String URL_GET_BALANCE = "https://pos.svia.nl/api/?action=get_user_balance&pin=%d&user=%d";
+    public static final String URL_GET_BUY_PRODUCT = "https://pos.svia.nl/api/?action=buy_products&bijpinnen=0&cart=%s&clientKey=%s&forUser=0&method=list&pincode=%d&user=%d";
     public static final String TAG = "NetworkFragment";
-    public static final String REFERER_HEADER = "https://dev.automatis.nl/pos/saldo/";
+    public static final String REFERER_HEADER = "https://pos.svia.nl/saldo/";
 
     private RequestQueue mRequestQueue;
     private Cache mCache;
@@ -58,49 +58,6 @@ public class NetworkFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        boolean checkSSL = sharedPrefs.getBoolean(
-                getActivity().getString(R.string.key_check_ssl),
-                getContext().getResources().getBoolean(R.bool.check_ssl_default));
-
-        if (checkSSL) {
-            return;
-        }
-
-        // Code from https://stackoverflow.com/a/34991596
-        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {
-            }
-
-            public void checkServerTrusted(X509Certificate[] certs, String authType) {
-            }
-        }};
-        SSLContext sc = null;
-        try {
-            sc = SSLContext.getInstance("SSL");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        try {
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-        } catch (KeyManagementException e) {
-            e.printStackTrace();
-        }
-        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        // Create all-trusting host name verifier
-        HostnameVerifier allHostsValid = new HostnameVerifier() {
-            public boolean verify(String hostname, SSLSession session) {
-                return true;
-            }
-        };
-        // Install the all-trusting host verifier
-        HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
     }
 
     /**
